@@ -1,0 +1,74 @@
+{
+  "root": true,
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "extends": ["standard-with-typescript", "plugin:react/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "project": "./tsconfig.json",
+    "createDefaultProgram": true
+  },
+  "plugins": ["react", "eslint-plugin-import-helpers"],
+  "globals": {
+    "cy": true
+  },
+  "rules": {
+    // project not-rules
+    "@typescript-eslint/prefer-optional-chain": "off",
+    "@typescript-eslint/space-before-function-paren": "off",
+    "@typescript-eslint/consistent-type-definitions": "off",
+    "@typescript-eslint/strict-boolean-expressions": "off",
+    "@typescript-eslint/no-floating-promises": "off",
+    "@typescript-eslint/comma-spacing": "off",
+    "@typescript-eslint/return-await": "off",
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/camelcase": "off",
+    "@typescript-eslint/prefer-readonly": "off",
+    "@typescript-eslint/consistent-type-assertions": "off",
+    "@typescript-eslint/no-extraneous-class": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/indent": "off",
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/no-empty-interface": "off",
+    "@typescript-eslint/no-misused-promises": "off",
+    "no-redeclare": "off",
+    "import/export": "off",
+    "space-before-function-paren": "off",
+    "no-unused-expressions": "off",
+    "react/prop-types": "off",
+    "no-case-declarations": "off",
+    "@typescript-eslint/triple-slash-reference": "off",
+    "@typescript-eslint/no-confusing-void-expression": "off",
+    "multiline-ternary": "off",
+    // conflict on svg file because react-native-svg-transformer
+    "react/react-in-jsx-scope": "off",
+    // it can report incorrect errors on react files
+    "no-use-before-define": "off",
+    "@typescript-eslint/no-use-before-define": "off",
+    // import helper
+    "import-helpers/order-imports": [
+      "error",
+      {
+        "newlinesBetween": "always",
+        "groups": [
+          "/^react/",
+          "module",
+          "/^@/controller/",
+          "/^@/core/",
+          "/^@/domain/",
+          "/^@/services/",
+          "/^@/data/",
+          "/^@//",
+          ["parent", "sibling", "index"]
+        ],
+        "alphabetize": {
+          "order": "asc",
+          "ignoreCase": true
+        }
+      }
+    ]
+  }
+}
