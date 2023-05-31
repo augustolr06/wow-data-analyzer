@@ -6,7 +6,7 @@ export const GlobalStyle = createGlobalStyle`
     padding: 0;
     box-sizing: border-box;
 
-    font-family: 'Ubuntu', sans-serif;
+    font-family: 'Ubuntu', 'Open Sans', sans-serif;
     line-height: 1.5;
     font-weight: 400;
 
@@ -21,24 +21,16 @@ export const GlobalStyle = createGlobalStyle`
     background: ${({ theme }) => theme.colors.secondaryD1};
     color: ${({ theme }) => theme.colors.neutralL5};
     -webkit-font-smoothing: antialiased;
-    font-size: 1rem;
 
-  &::-webkit-scrollbar {
-    width: 8px !important;
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: ${({ theme }) => theme.colors.secondaryL2};
-  }
-  }
-
-  body, input, textarea, button {
+    &::-webkit-scrollbar {
+      width: 8px !important;
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: ${({ theme }) => theme.colors.secondaryL2};
+    }
   }
 
   ul, li {
     list-style: none;
-  }
-
-  button {
-    cursor: pointer;
   }
 `
