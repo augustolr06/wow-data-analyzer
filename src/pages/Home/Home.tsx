@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
 
-import { TextField, Button, IconButton, Select, SelectItem, Pill } from '@nexds/web'
+import { TextField, Button, IconButton, Select, SelectItem } from '@nexds/web'
 import * as Table from '@nexds/web/dist/components/Table' // Table.Root, Table.HeaderRow, Table.HeaderCol, Table.BodyRow, Table.BodyCol, Table.Pagination
 
+import { api } from '../../services/api'
 import {
   HomeContainer,
   Filters,
@@ -10,92 +11,27 @@ import {
   FiltersOptions,
   FiltersWrapper,
   FilterSelected,
-  Quests,
-  TagsWrapper
+  Quests
 } from './Home.styles'
 
-// Essa tela deve ter uma área onde o usuário pode escolher vários filtros para encontrar a quest que ele deseja.
-// Deve ter um botão para adicionar novos filtros.
-// Esse botão abre uma opção de escolha de filtros. Ao clicar em um filtro, ele é adicionado na tela.
-// Deve ter um botão para remover filtros.
-// Deve ter um botão de buscar, que ao ser clicado, deve fazer uma requisição para a API e retornar as quests que atendem aos filtros.
-// Deve ter uma área onde são exibidas as quests encontradas.
+export interface IQuest {
+  id: number
+  titulo: string
+  descricao: string
+  categoria: string
+  area: number
+  tipo: string
+}
 
 export function Home() {
-  const quests = [
-    {
-      id: 1,
-      name: 'Quest 1',
-      description: 'Description 1',
-      level: 1,
-      reward: 100,
-      questType: 'quest',
-      questStatus: 'open',
-      questCategory: 'category',
-      questSubCategory: 'sub category',
-      questTags: ['tag1', 'tag2']
-    },
-    {
-      id: 2,
-      name: 'Quest 2',
-      description: 'Description 2',
-      level: 2,
-      reward: 200,
-      questType: 'quest',
-      questStatus: 'open',
-      questCategory: 'category',
-      questSubCategory: 'sub category',
-      questTags: ['tag1', 'tag2']
-    },
-    {
-      id: 3,
-      name: 'Quest 3',
-      description: 'Description 3',
-      level: 3,
-      reward: 300,
-      questType: 'quest',
-      questStatus: 'open',
-      questCategory: 'category',
-      questSubCategory: 'sub category',
-      questTags: ['tag1', 'tag2']
-    },
-    {
-      id: 4,
-      name: 'Quest 4',
-      description: 'Description 4',
-      level: 4,
-      reward: 400,
-      questType: 'quest',
-      questStatus: 'open',
-      questCategory: 'category',
-      questSubCategory: 'sub category',
-      questTags: ['tag1', 'tag2']
-    },
-    {
-      id: 5,
-      name: 'Quest 5',
-      description: 'Description 5',
-      level: 5,
-      reward: 500,
-      questType: 'quest',
-      questStatus: 'open',
-      questCategory: 'category',
-      questSubCategory: 'sub category',
-      questTags: ['tag1', 'tag2']
-    }
-  ]
-
-  const [filters, setFilters] = useState<string[]>([
-    'Quest Type',
-    'Quest Status',
-    'Quest Category',
-    'Quest Sub Category',
-    'Quest Tags'
-  ])
+  const [filters, setFilters] = useState<string[]>(['titulo', 'descricao', 'categoria', 'area', 'tipo'])
 
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [search, setSearch] = useState('')
-  const [searchResults, setSearchResults] = useState<typeof quests>([])
+  const [searchResults, setSearchResults] = useState<IQuest[]>([])
+
+  // teste com erros capturados pelo axios
+  const [thereIsError, setThereIsError] = useState(false)
 
   const handleAddFilter = (filter: string) => {
     setSelectedFilters([...selectedFilters, filter])
@@ -108,18 +44,46 @@ export function Home() {
   }
 
   const handleSearch = () => {
-    const results = quests.filter((q) => q.name.toLowerCase().includes(search)) // ARRUMAR ESSA LÓGICA PARA IGNIORAR CASE
-    setSearchResults(results)
+    api
+      .get('/quests', {
+        params: {
+          name: search,
+          filters: selectedFilters
+        }
+      })
+      .then((response) => {
+        setSearchResults(response.data)
+      })
+  }
+
+  const handleGetOneQuests = () => {
+    api
+      .get('/quest/313')
+      .then((response) => {
+        setSearchResults([response.data])
+        setThereIsError(false)
+      })
+      .catch((error) => {
+        console.log(error)
+        setThereIsError(true)
+      })
   }
 
   return (
     <HomeContainer>
+      <Button
+        color={thereIsError ? 'danger' : 'primary'}
+        variant="filled"
+        size="sm"
+        label={thereIsError ? 'Erro' : 'Buscar Quest'}
+        onPress={handleGetOneQuests}
+      />
       <FiltersSearch>
         <Filters>
           <FiltersWrapper>
             <TextField
-              label="Nome da Quest"
-              placeholder="Buscar por nome"
+              label="Título da Quest"
+              placeholder="Buscar pelo título"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -151,40 +115,24 @@ export function Home() {
       <Button label="Buscar" color="secondary" variant="filled" size="sm" onPress={handleSearch} />
       <Quests>
         <Table.Root dividers>
-          <Table.HeaderRow>
-            <Table.HeaderCol label="Nome" align="center" minWidth="100px" />
-            <Table.HeaderCol label="Descrição" align="center" minWidth="100px" />
-            <Table.HeaderCol label="Nível" align="center" minWidth="100px" />
-            <Table.HeaderCol label="Recompensa" align="center" minWidth="100px" />
-            <Table.HeaderCol label="Tipo" align="center" minWidth="100px" />
-            <Table.HeaderCol label="Status" align="center" minWidth="100px" />
-            <Table.HeaderCol label="Categoria" align="center" minWidth="100px" />
-            <Table.HeaderCol label="Sub Categoria" align="center" minWidth="100px" />
-            <Table.HeaderCol label="Tags" align="center" minWidth="100px" />
-          </Table.HeaderRow>
-          {searchResults.map((quest) => (
-            <Table.BodyRow key={quest.id}>
-              <Table.BodyCol content={quest.name} />
-              <Table.BodyCol content={quest.description} />
-              <Table.BodyCol content={quest.level} />
-              <Table.BodyCol content={quest.reward} />
-              <Table.BodyCol content={quest.questType} />
-              <Table.BodyCol content={quest.questStatus} />
-              <Table.BodyCol content={quest.questCategory} />
-              <Table.BodyCol content={quest.questSubCategory} />
-              <Table.BodyCol
-                minWidth={`${100 * quest.questTags.length}px`}
-                align="left"
-                content={
-                  <TagsWrapper>
-                    {quest.questTags.map((tag) => (
-                      <Pill key={tag} label={tag} variant="filled" color="#454545" />
-                    ))}
-                  </TagsWrapper>
-                }
-              />
-            </Table.BodyRow>
-          ))}
+          <thead>
+            <Table.HeaderRow>
+              {filters.map((filter) => (
+                <Table.HeaderCol key={filter} label={filter} align="center" minWidth="100px" />
+              ))}
+            </Table.HeaderRow>
+          </thead>
+          <tbody>
+            {searchResults.map((quest) => (
+              <Table.BodyRow key={quest.id}>
+                <Table.BodyCol content={quest.titulo} />
+                <Table.BodyCol content={quest.descricao} />
+                <Table.BodyCol content={quest.categoria} />
+                <Table.BodyCol content={quest.area} />
+                <Table.BodyCol content={quest.tipo} />
+              </Table.BodyRow>
+            ))}
+          </tbody>
         </Table.Root>
       </Quests>
     </HomeContainer>
