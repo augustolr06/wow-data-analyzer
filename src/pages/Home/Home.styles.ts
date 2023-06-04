@@ -63,7 +63,6 @@ export const FiltersOptions = styled.div`
   flex-direction: row;
   align-items: flex-start;
   justify-content: center;
-
   width: 200px;
 `
 

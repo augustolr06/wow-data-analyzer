@@ -25,3 +25,7 @@ dist-ssr
 
 # envoriment files
 .env
+
+# my files
+src/pages/CreateQuest/*
+server/rascunho.py
