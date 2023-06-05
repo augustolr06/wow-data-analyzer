@@ -3,14 +3,8 @@ from flask import Flask, jsonify, request, make_response
 from flask_cors import CORS
 import dotenv
 import os
-
-# Objetivo inicial: disponibilizar um crud para a tabela quest
-# endpoints:
-# GET /api/quest -> retorna todas as quests
-# GET /api/quest/<id> -> retorna a quest com o id <id>
-# POST /api/quest -> cria uma nova quest
-# PUT /api/quest/<id> -> atualiza a quest com o id <id>
-# DELETE /api/quest/<id> -> deleta a quest com o id <id>
+from collections import OrderedDict
+import json
 
 # Carregando variáveis de ambiente
 dotenv.load_dotenv()
@@ -28,9 +22,7 @@ CORS(App)
 
 # Definindo as rotas:
 
-# GET /api/quests -> retorna todas as quests
-
-
+# GET: retorna todas as quests -------------------------------------------------------------------
 @App.route("/api/quests", methods=["GET"])
 def getQuests():
     # Executando uma query
@@ -55,9 +47,11 @@ def getQuests():
 
     # Devolvendo a resposta
     return jsonify(quests)
+# -----------------------------------------------------------------------------------------------
+
+# GET: retorna a quest com o id <id> -------------------------------------------------------------
 
 
-# GET /api/quest/<id> -> retorna a quest com o id <id>
 @App.route("/api/quest/<id>", methods=["GET"])
 def getQuest(id):
     # Executando uma query
@@ -85,96 +79,50 @@ def getQuest(id):
 
     # Devolvendo a resposta
     return jsonify(quest)
+# -----------------------------------------------------------------------------------------------
 
-# POST /api/quest -> cria uma nova quest
+# GET: Retorna todas as quests de acordo com uma quantidade de filtros ---------------------------
 
 
-@App.route("/api/quest", methods=["POST"])
-def createQuest():
+@App.route("/api/quests/filter", methods=["GET"])
+def getQuestsFilter():
     # obetendo os dados do body da requisição
-    data = request.get_json()
-    # armazenando os dados do body da requisição em variáveis
-    titulo = data["titulo"]
-    descricao = data["descricao"]
-    categoria = data["categoria"]
-    area = data["area"]
-    tipo = data["tipo"]
+    data = request.args
 
-    # Verificando se a quest já existe
-    cursor = conn.cursor()
-    sql = "SELECT * FROM quest WHERE titulo = %s AND descricao = %s AND categoria = %s AND area = %s AND tipo = %s"
-    cursor.execute(sql, (titulo, descricao, categoria, area, tipo))
-    records = cursor.fetchall()
-    if len(records) > 0:
-        return make_response(jsonify({"message": "Quest already exists"}), 409)
+    # reescrevendo a query acima utilizando f-strings
+    sql = "SELECT * FROM quest WHERE "
+    for key in data:
+        if key == "id":
+            sql += f"titulo LIKE {data[key]} AND "
+        elif key == "area":
+            sql += f"area = {data[key]} AND "
+        else:
+            sql += f"{key} = '{data[key]}' AND "
+    sql = sql[:-5]
 
     # Executando a query
     cursor = conn.cursor()
-    sql = "INSERT INTO quest (titulo, descricao, categoria, area, tipo) VALUES (%s, %s, %s, %s, %s)"
-    cursor.execute(sql, (titulo, descricao, categoria, area, tipo))
+    cursor.execute(sql)
 
-    # Recuperando o id da quest criada
-    sql = "SELECT id FROM quest WHERE titulo = %s AND descricao = %s AND categoria = %s AND area = %s AND tipo = %s"
-    cursor.execute(sql, (data["titulo"], data["descricao"],
-                         data["categoria"], data["area"], data["tipo"]))
-    id = cursor.fetchone()[0]
-
-    # Commitando a query
-    conn.commit()
-
-    # Retornando a resposta
-    return make_response(jsonify({"message": "Quest created", "id": id}), 201)
-
-
-# PUT /api/quest/<id> -> atualiza a quest com o id <id>
-@App.route("/api/quest/<id>", methods=["PUT"])
-def updateQuest(id):
-    # obetendo os dados do body da requisição
-    data = request.get_json()
-
-    # Verificando se a quest existe
-    cursor = conn.cursor()
-    sql = "SELECT * FROM quest WHERE id = %s"
-    cursor.execute(sql, (id,))
+    # Recuperando os resultados
     records = cursor.fetchall()
-    if len(records) == 0:
-        return make_response(jsonify({"message": "Quest not found"}), 404)
 
-    # Executando a query
-    cursor = conn.cursor()
-    sql = "UPDATE quest SET titulo = %s, descricao = %s, categoria = %s, area = %s, tipo = %s WHERE id = %s"
-    cursor.execute(sql, (data["titulo"], data["descricao"],
-                         data["categoria"], data["area"], data["tipo"], id))
+    # Transformando os resultados em um objeto quests com uma lista de quests
+    quests = []
+    for record in records:
+        quest = OrderedDict([
+            ("id", record[0]),
+            ("titulo", record[1]),
+            ("descricao", record[2]),
+            ("categoria", record[3]),
+            ("area", record[4]),
+            ("tipo", record[5])
+        ])
+        quests.append(quest)
 
-    # Commitando a query
-    conn.commit()
-
-    # Retornando a resposta
-    return make_response(jsonify({"message": "Quest updated"}), 200)
-
-
-# DELETE /api/quest/<id> -> deleta a quest com o id <id>
-@App.route("/api/quest/<id>", methods=["DELETE"])
-def deleteQuest(id):
-
-    # Verificando se a quest existe
-    cursor = conn.cursor()
-    sql = "SELECT * FROM quest WHERE id = %s"
-    cursor.execute(sql, (id,))
-    records = cursor.fetchall()
-    if len(records) == 0:
-        return make_response(jsonify({"message": "Quest not found"}), 404)
-
-    # Executando a query
-    cursor = conn.cursor()
-    sql = "DELETE FROM quest WHERE id = %s"
-    cursor.execute(sql, (id,))
-
-    # Commitando a query
-    conn.commit()
-
-    # Retornando a resposta
-    return make_response(jsonify({"message": "Quest deleted"}), 200)
+    # Devolvendo a resposta
+    return make_response(json.dumps(quests, ensure_ascii=False, sort_keys=False), 200)
+# -----------------------------------------------------------------------------------------------
 
 
 def closeConnection():

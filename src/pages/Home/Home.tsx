@@ -11,7 +11,7 @@ import {
   FiltersOptions,
   FiltersWrapper,
   FilterSelected,
-  Quests
+  Results
 } from './Home.styles'
 
 export interface IQuest {
@@ -31,10 +31,10 @@ export function Home() {
   const searchByOptions = ['quest', 'area', 'recompensa']
   const [searchResults, setSearchResults] = useState<IQuest[]>([])
   const [isComboboxOpen, setIsComboboxOpen] = useState<boolean>(false)
-  // criar um estado que armazena um array de filtros com seus respectivos valores
+  // estado que armazena um array de filtros com seus respectivos valores
   const [filtersValues, setFiltersValues] = useState<Record<string, string>>({})
 
-  // criar uma função que seta o valor de cada filtro no estado filtersValues (onChange)
+  // função que seta o valor de cada filtro no estado filtersValues (onChange)
   const handleFilterValueChange = (filter: string, value: string) => {
     setFiltersValues({ ...filtersValues, [filter]: value })
   }
@@ -50,20 +50,13 @@ export function Home() {
   }
 
   const handleSearch = () => {
-    // api
-    //   .get('/quests', {
-    //     params: {
-    //       name: searchBySelected,
-    //       filters: selectedFilters
-    //     }
-    //   })
-    //   .then((response) => {
-    //     setSearchResults(response.data)
-    //   })
-
-    /*
-      testando se os valores dos filtros estão sendo armazenados corretamente */
-    console.log(filtersValues)
+    const params = Object.keys(filtersValues)
+      .map((key) => `${encodeURIComponent(key)}=${encodeURIComponent(filtersValues[key])}`)
+      .join('&')
+    console.log(params)
+    api.get(`/quests/filter?${params}`).then((response) => {
+      setSearchResults(response.data)
+    })
   }
 
   return (
@@ -88,7 +81,7 @@ export function Home() {
               <FilterSelected key={filter}>
                 <TextField
                   label={filter}
-                  placeholder={`Digite o ${filter}`}
+                  placeholder={`Insira o valor para ${filter}`}
                   value={filtersValues[filter]}
                   onChange={(e) => handleFilterValueChange(filter, e.target.value)}
                 />
@@ -127,33 +120,35 @@ export function Home() {
           zIndex: isComboboxOpen ? -1 : 0
         }}
       />
-      <Quests
+      <Results
         style={{
           opacity: isComboboxOpen ? 0.5 : 1,
           zIndex: isComboboxOpen ? -1 : 0
         }}
       >
-        <Table.Root dividers>
+        <Table.Root dividers zebra>
           <thead>
             <Table.HeaderRow>
-              {filters.map((filter) => (
-                <Table.HeaderCol key={filter} label={filter} align="center" minWidth="100px" />
-              ))}
+              {searchResults.length > 0 &&
+                Object.keys(searchResults[0]).map((key) => (
+                  <Table.HeaderCol key={key} label={key} align="center" minWidth="90px" />
+                ))}
             </Table.HeaderRow>
           </thead>
           <tbody>
             {searchResults.map((quest) => (
               <Table.BodyRow key={quest.id}>
-                <Table.BodyCol content={quest.titulo} />
-                <Table.BodyCol content={quest.descricao} />
-                <Table.BodyCol content={quest.categoria} />
-                <Table.BodyCol content={quest.area} />
-                <Table.BodyCol content={quest.tipo} />
+                <Table.BodyCol content={quest.id.toString() ?? <i>{'null'}</i>} />
+                <Table.BodyCol content={quest.titulo ?? <i>{'null'}</i>} />
+                <Table.BodyCol content={quest.descricao ?? <i>{'null'}</i>} />
+                <Table.BodyCol content={quest.categoria ?? <i>{'null'}</i>} />
+                <Table.BodyCol content={quest.area.toString() ?? <i>{'null'}</i>} />
+                <Table.BodyCol content={quest.tipo ?? <i>{'null'}</i>} />
               </Table.BodyRow>
             ))}
           </tbody>
         </Table.Root>
-      </Quests>
+      </Results>
     </HomeContainer>
   )
 }

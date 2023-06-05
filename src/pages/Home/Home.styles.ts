@@ -66,8 +66,14 @@ export const FiltersOptions = styled.div`
   width: 200px;
 `
 
-export const Quests = styled.div`
-  width: 1500px;
+export const Results = styled.div`
+  width: 100%;
+  min-width: fit-content;
+  max-width: 1600px;
+
+  & i {
+    color: ${({ theme }) => theme.colors.secondaryL2};
+  }
 `
 
 export const TagsWrapper = styled.div`
