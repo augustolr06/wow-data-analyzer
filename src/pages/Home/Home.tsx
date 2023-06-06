@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 
-import { TextField, Button, IconButton, Select, SelectItem, Combobox } from '@nexds/web'
+import { TextField, Button, IconButton, Select, SelectItem } from '@nexds/web'
 import * as Table from '@nexds/web/dist/components/Table' // Table.Root, Table.HeaderRow, Table.HeaderCol, Table.BodyRow, Table.BodyCol, Table.Pagination
 
 import { api } from '../../services/api'
 import {
+  BackgroundImage,
+  HeaderImage,
   HomeContainer,
   Filters,
   FiltersSearch,
@@ -27,8 +29,8 @@ export function Home() {
   const [filters, setFilters] = useState<string[]>(['', 'titulo', 'descricao', 'categoria', 'area', 'tipo'])
 
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
-  const [searchBySelected, setSearchBySelected] = useState<string>('')
-  const searchByOptions = ['quest', 'area', 'recompensa']
+  const [searchBySelected, setSearchBySelected] = useState<(typeof searchByOptions)[number]>('')
+  const searchByOptions = ['quest', 'item']
   const [searchResults, setSearchResults] = useState<IQuest[]>([])
   const [isComboboxOpen, setIsComboboxOpen] = useState<boolean>(false)
   // estado que armazena um array de filtros com seus respectivos valores
@@ -61,22 +63,26 @@ export function Home() {
 
   return (
     <HomeContainer>
+      <HeaderImage>
+        <img src="/images/wow-header.webp" width={300} />
+      </HeaderImage>
+      <BackgroundImage />
       <FiltersSearch>
         <Filters>
           <FiltersWrapper>
-            <Combobox
+            <Select
               label="Buscar"
-              placeholder="Digite o que deseja buscar"
+              placeholder="escolha o que você quer mostrar"
               leftIcon="Search"
               value={searchBySelected}
-              onChange={(e) => setSearchBySelected(e.target.value)}
+              onChange={(option) => setSearchBySelected(option)}
               onFocus={() => setIsComboboxOpen(true)}
               onBlur={() => setIsComboboxOpen(false)}
             >
               {searchByOptions.map((option) => (
                 <SelectItem key={option} label={option} value={option} style={{ zIndex: 100 }} />
               ))}
-            </Combobox>
+            </Select>
             {selectedFilters.map((filter) => (
               <FilterSelected key={filter}>
                 <TextField
