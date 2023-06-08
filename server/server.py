@@ -19,110 +19,82 @@ conn = psycopg2.connect(conn_string)
 App = Flask(__name__)
 CORS(App)
 
-
-# Definindo as rotas:
-
+# Criando os endpoints:
 # GET: retorna todas as quests -------------------------------------------------------------------
-@App.route("/api/quests", methods=["GET"])
-def getQuests():
-    # Executando uma query
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM quest")
+# ------------------------------------------------------------------------------------------------
 
-    # Recuperando os resultados
-    records = cursor.fetchall()
+# GET: retorna toda a quest com o id especificado -------------------------------------------------
+# ------------------------------------------------------------------------------------------------
 
-    # Transformando os resultados em um objeto quests com uma lista de quests
-    quests = []
-    for record in records:
-        quest = {
-            "id": record[0],
-            "titulo": record[1],
-            "descricao": record[2],
-            "categoria": record[3],
-            "area": record[4],
-            "tipo": record[5]
-        }
-        quests.append(quest)
-
-    # Devolvendo a resposta
-    return jsonify(quests)
-# -----------------------------------------------------------------------------------------------
-
-# GET: retorna a quest com o id <id> -------------------------------------------------------------
+# GET: retorna todas as quests com os filtros especificados ---------------------------------------
+# Esse endpoint devolve apenas os dados das quests. A tabela quest possui chaves estrangeiras para cada tabela de filtro, então é necessário fazer um join com cada tabela de filtro para pegar os dados de cada filtro.
 
 
-@App.route("/api/quest/<id>", methods=["GET"])
-def getQuest(id):
-    # Executando uma query
-    cursor = conn.cursor()
-    sql = "SELECT * FROM quest WHERE id = %s"
-    cursor.execute(sql, (id,))
-
-    # Recuperando os resultados
-    records = cursor.fetchall()
-
-    # Verificando se a quest existe
-    if len(records) == 0:
-        return make_response(jsonify({"message": "Quest not found"}), 404)
-
-    # Transformando os resultados em um objeto quest
-    record = records[0]
-    quest = {
-        "id": record[0],
-        "titulo": record[1],
-        "descricao": record[2],
-        "categoria": record[3],
-        "area": record[4],
-        "tipo": record[5]
-    }
-
-    # Devolvendo a resposta
-    return jsonify(quest)
-# -----------------------------------------------------------------------------------------------
-
-# GET: Retorna todas as quests de acordo com uma quantidade de filtros ---------------------------
-
-
-@App.route("/api/quests/filter", methods=["GET"])
-def getQuestsFilter():
-    # obetendo os dados do body da requisição
-    data = request.args
-
-    # reescrevendo a query acima utilizando f-strings
-    sql = "SELECT * FROM quest WHERE "
-    for key in data:
-        if key == "id":
-            sql += f"titulo LIKE {data[key]} AND "
-        elif key == "area":
-            sql += f"area = {data[key]} AND "
+@App.route("/api/quests/filters", methods=["GET"])
+def getQuestsByFilters():
+    query = "SELECT q.id, q.title, q.area, q.description, q.requirements, q.rewards FROM Quest q"
+    # Convertendo os parâmetros da URL em um dicionário. Ex: ?quest.title=titulo%20da%20quest&requirements.money=5000&requirements.level=10&rewards.faction=1&rewards.minCharacterLevel=10 -> {"quest.title": "titulo da quest", "requirements.money": "5000", "requirements.level": "10", "rewards.faction": "1", "rewards.minCharacterLevel": "10"}
+    filtersParams = request.args.to_dict()
+    # pegando cada chave do dicionário e verificar qual a tabela que ela pertence, adicionando em uma lista de tabelas, adicionando um quest_ no começo de do nome das tabelas rewards e requirements, apenas. Se houver outras tabelas, adicionar o nome delas na lista de tabelas. Ex: {"quest.title": "titulo da quest", "requirements.money": "5000", "requirements.level": "10", "rewards.faction": "1", "rewards.minCharacterLevel": "10"} -> ["quest", "requirements", "rewards"]
+    tablesName = []
+    questsForeignKeys = []
+    # tablesName deve conter um quest_ no começo do nome das tabelas rewards e requirements, apenas. Ex: ["quest", "requirements", "rewards"]
+    # QuestsForeignKeys deve conter o nome das tabelas rewards e requirements, apenas. Ex: ["requirements", "rewards"]
+    for key in filtersParams.keys():
+        keySplit = key.split(".")
+        table = keySplit[0]
+        if table == 'quest':
+            continue
+        if table == "rewards" or table == "requirements":
+            tableAux = "quest_" + table
+            if tableAux not in tablesName:
+                tablesName.append(tableAux)
+                questsForeignKeys.append(table)
         else:
-            sql += f"{key} = '{data[key]}' AND "
-    sql = sql[:-5]
+            if table not in tablesName:
+                tablesName.append(table)
+                questsForeignKeys.append(table)
 
-    # Executando a query
+    # adicionando os joins na query
+    for table in tablesName:
+        query += f" JOIN {table}"
+    for foreignKey in questsForeignKeys:
+        query += f" q.{foreignKey} = {foreignKey}.id AND"
+    query = query[:-4]
+
+    # adicionando os filtros na query
+    for key in filtersParams.keys():
+        keySplit = key.split(".")
+        table = keySplit[0]
+        column = keySplit[1]
+        value = filtersParams[key]
+        if table == "rewards" or table == "requirements":
+            table = "quest_" + table
+        query += f" WHERE {table}.{column} = '{value}'"
+
+    print(query)
+
+    # executando a query
     cursor = conn.cursor()
-    cursor.execute(sql)
+    cursor.execute(query)
 
-    # Recuperando os resultados
-    records = cursor.fetchall()
+    # pegando os dados da query
+    quests = cursor.fetchall()
 
-    # Transformando os resultados em um objeto quests com uma lista de quests
-    quests = []
-    for record in records:
-        quest = OrderedDict([
-            ("id", record[0]),
-            ("titulo", record[1]),
-            ("descricao", record[2]),
-            ("categoria", record[3]),
-            ("area", record[4]),
-            ("tipo", record[5])
-        ])
-        quests.append(quest)
+    # fechando o cursor
+    cursor.close()
 
-    # Devolvendo a resposta
-    return make_response(json.dumps(quests, ensure_ascii=False, sort_keys=False), 200)
-# -----------------------------------------------------------------------------------------------
+    # retornando os dados da query
+    return jsonify(quests)
+
+
+# ------------------------------------------------------------------------------------------------
+
+# GET: retorna todos os itens --------------------------------------------------------------------
+# ------------------------------------------------------------------------------------------------
+
+# GET: retorna todos os itens com o id especificado -----------------------------------------------
+# ------------------------------------------------------------------------------------------------
 
 
 def closeConnection():
@@ -135,3 +107,25 @@ if __name__ == "__main__":
 
     # Fechando a conexão com o banco de dados
     closeConnection()
+
+    # for key in filtersParams.keys():
+    #     keySplit = key.split(".")
+    #     table = keySplit[0]
+    #     if table == "rewards" or table == "requirements":
+    #         table = "quest_" + table
+    #     if table not in tables:
+    #         tables.append(table)
+
+    # # adicionando os joins na query
+    # for table in tables:
+    #     query += f" JOIN {table} ON q.{table} = {table}.id"
+
+    # # adicionando os filtros na query
+    # for key in filtersParams.keys():
+    #     keySplit = key.split(".")
+    #     table = keySplit[0]
+    #     column = keySplit[1]
+    #     value = filtersParams[key]
+    #     if table == "rewards" or table == "requirements":
+    #         table = "quest_" + table
+    #     query += f" WHERE {table}.{column} = '{value}'"

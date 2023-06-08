@@ -20,6 +20,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.11.2",
+    "react-slick": "^0.29.0",
     "stream": "^0.0.2",
     "styled-components": "^5.3.11",
     "vite-plugin-svgr": "^3.2.0"
@@ -28,6 +29,7 @@
     "@svgr/webpack": "^8.0.1",
     "@types/react": "^18.0.37",
     "@types/react-dom": "^18.0.11",
+    "@types/react-slick": "^0.23.10",
     "@types/styled-components": "^5.1.26",
     "@vitejs/plugin-react": "^4.0.0",
     "eslint": "^8.38.0",

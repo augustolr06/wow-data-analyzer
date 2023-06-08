@@ -70,7 +70,7 @@ export const FiltersWrapper = styled.div`
   }
 `
 
-export const FilterSelected = styled.div`
+export const SimpleFilterSelected = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -80,6 +80,28 @@ export const FilterSelected = styled.div`
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
+
+  background-color: aqua;
+`
+
+export const AdvancedFilterSelected = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+
+  & > :first-child {
+    width: 300px;
+  }
+
+  & > :nth-child(2) {
+    width: 300px;
+  }
 `
 
 export const FiltersOptions = styled.div`
@@ -87,7 +109,7 @@ export const FiltersOptions = styled.div`
   flex-direction: row;
   align-items: flex-start;
   justify-content: center;
-  width: 200px;
+  width: 300px;
 `
 
 export const Results = styled.div`
