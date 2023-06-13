@@ -28,4 +28,4 @@ dist-ssr
 
 # my files
 src/pages/CreateQuest/*
-server/rascunho.py
+server/*
