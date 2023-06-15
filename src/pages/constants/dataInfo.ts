@@ -8,11 +8,24 @@ export interface IQuest {
 }
 
 export const questFilters = ['title', 'area', 'description', 'requirements', 'rewards']
-export const questFiltersAdvanced = ['area', 'requirements', 'rewards']
-export const areaOptions = ['id', 'name']
+export const questFiltersAdvanced = [
+  'area.id',
+  'area.name',
+  'requirements.id',
+  'requirements.maxCharacterLevel',
+  'requirements.minCharacterLevel',
+  'requirements.faction',
+  'rewards.id',
+  'rewards.experience',
+  'rewards.money',
+  'rewards.reputations',
+  'rewards.items'
+]
 
-export const rewardsOptions = ['id', 'experience', 'money', 'reputations', 'items']
-export const requirementsOptions = ['id', 'maxCharacterLevel', 'minCharacterLevel', 'faction']
+// export const areaOptions = ['id', 'name']
+
+// export const rewardsOptions = ['id', 'experience', 'money', 'reputations', 'items']
+// export const requirementsOptions = ['id', 'maxCharacterLevel', 'minCharacterLevel', 'faction']
 
 export interface IItem {
   id: number

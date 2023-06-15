@@ -27,5 +27,5 @@ dist-ssr
 .env
 
 # my files
-src/pages/CreateQuest/*
+src/pages/Quests/*
 server/*
