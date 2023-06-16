@@ -13,11 +13,7 @@ import { BackgroundImage, HeaderImage, HomeContainer } from './Home.styles'
     {
       atributos: ['nomedaTabela.atributo1', 'nomedaTabela.atributo2', 'nomedaTabela.atributo3'],
       tabelas: ['nomedaTabela1', 'nomedaTabela2', 'nomedaTabela3'],
-      filtros: {
-        nomedaTabela.atributo1: 'operador + espaço + valor',
-        nomedaTabela.atributo2: 'operador + espaço + valor',
-        nomedaTabela3: 'operador + espaço + valor',
-      }
+      filtros: ['nomedaTabela.atributo1.operador.espaço.valor', 'nomedaTabela.atributo2.operador.espaço.valor']
     }
     5. Ao clicar em "Buscar", deve ser feita uma requisição para o backend com as informações do objeto.
     5.1. Deve haver uma função que transforme o objeto em uma string de parâmetros.
