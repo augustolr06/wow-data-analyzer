@@ -7,7 +7,7 @@ export const BackgroundImage = styled.div`
   z-index: -1;
 
   width: 100%;
-  height: 100%;
+  height: 300vh;
   background-image: url('/images/wow-bg-1.jpg');
   background-size: cover;
   background-position: center;
@@ -59,7 +59,7 @@ export const MainTableInfoWrapper = styled.div`
   justify-content: flex-start;
   gap: 15px;
   width: 100%;
-  margin-top: 20px;
+  margin-top: 15px;
 
   & > *:first-child {
     width: 70%;
@@ -70,6 +70,14 @@ export const SelectorWrapper = styled.div`
   width: 40%;
 `
 
+export const Divider = styled.hr`
+  margin: 15px 0 20px;
+  width: 98%;
+  align-self: center;
+  border: 1px solid ${(props) => props.theme.colors.secondaryL2};
+  opacity: 0;
+`
+
 export const TableInfoWrapper = styled.div`
   width: 100%;
   display: flex;
@@ -78,6 +86,7 @@ export const TableInfoWrapper = styled.div`
   justify-content: flex-start;
   gap: 15px;
   width: 100%;
+  margin-top: 15px;
 `
 
 export const AttributesWrapper = styled.div`
@@ -94,4 +103,35 @@ export const RelatedTablesWrapper = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 15px;
   width: 100%;
+`
+
+export const FiltersContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 15px;
+  width: 50%;
+  margin-top: 15px;
+`
+
+export const FilterWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  width: 100%;
+
+  & > *:nth-child(2) {
+    width: 20%;
+  }
+`
+
+export const TitleWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 15px;
 `
