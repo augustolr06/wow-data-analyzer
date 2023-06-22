@@ -35,6 +35,7 @@ export const HomeContainer = styled.div`
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
+  gap: 15px;
 `
 
 interface BackdropProps {
@@ -54,12 +55,11 @@ export const Backdrop = styled.div<BackdropProps>`
 
 export const MainTableInfoWrapper = styled.div`
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
   gap: 15px;
   width: 100%;
-  margin-top: 15px;
 
   & > *:first-child {
     width: 70%;
@@ -78,31 +78,33 @@ export const Divider = styled.hr`
   opacity: 0;
 `
 
+export const RelatedTablesWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+`
+
 export const TableInfoWrapper = styled.div`
   width: 100%;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: flex-start;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   gap: 15px;
   width: 100%;
-  margin-top: 15px;
+  padding: 10px;
+  border-radius: 5px;
+  background-color: ${(props) => `${props.theme.colors.neutralL0}30`};
 `
 
 export const AttributesWrapper = styled.div`
-  width: 30%;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-start;
   gap: 15px;
-`
-
-export const RelatedTablesWrapper = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 15px;
-  width: 100%;
 `
 
 export const FiltersContainer = styled.div`
@@ -112,7 +114,6 @@ export const FiltersContainer = styled.div`
   justify-content: flex-start;
   gap: 15px;
   width: 50%;
-  margin-top: 15px;
 `
 
 export const FilterWrapper = styled.div`

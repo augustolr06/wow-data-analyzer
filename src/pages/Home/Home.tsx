@@ -1,13 +1,26 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 // import { Button, Select, SelectItem, Checkbox } from '@nexds/web'
 
 import { Button, Checkbox, Select, SelectItem, TextField, IconButton } from '@nexds/web'
 
 import {
+  tables,
+  questAttributes,
+  questRelacionamentos,
+  itemRelacionamentos,
+  itemAttributes,
+  areaAttributes,
+  rewardsAttributes,
+  requirementsAttributes,
+  itemClassAttributes,
+  itemStatsAttributes,
+  itemSubClassAttributes,
+  weaponStatsAttributes
+} from '../constants'
+import {
   AttributesWrapper,
   BackgroundImage,
-  Divider,
   FiltersContainer,
   FilterWrapper,
   HeaderImage,
@@ -15,8 +28,7 @@ import {
   MainTableInfoWrapper,
   RelatedTablesWrapper,
   SelectorWrapper,
-  TableInfoWrapper,
-  TitleWrapper
+  TableInfoWrapper
 } from './Home.styles'
 
 /*
@@ -27,7 +39,6 @@ import {
     4.1. O objeto deve ter a seguinte estrutura:
     {
       atributos: ['nomedaTabela.atributo1', 'nomedaTabela.atributo2', 'nomedaTabela.atributo3'],
-      tabelas: ['nomedaTabela1', 'nomedaTabela2', 'nomedaTabela3'],
       filtros: ['nomedaTabela.atributo1.operador.espaço.valor', 'nomedaTabela.atributo2.operador.espaço.valor']
     }
     5. Ao clicar em "Buscar", deve ser feita uma requisição para o backend com as informações do objeto.
@@ -36,22 +47,32 @@ import {
     6. O backend vai receber a string de parâmetros, transformar em um objeto e fazer a busca no banco de dados.
     7. O backend vai retornar um array de objetos com as informações que o usuário pediu.
     8. O frontend vai receber o array de objetos e exibir na tela.
-   */
+*/
+
+/*
+    1. A mainTable diz qual API deve ser chamada.
+*/
 
 export function Home() {
-  const tables = ['Tabela1', 'Tabela2', 'Tabela3']
-  const attributes = ['Atributo1', 'Atributo2', 'Atributo3']
-  const relacionamentos = ['Relacionamento1', 'Relacionamento2', 'Relacionamento3']
-  const atributosRelacionamento1 = ['AR1-1', 'AR1-2', 'AR1-3']
-  const atributosRelacionamento2 = ['AR2-1', 'AR2-2', 'AR2-3']
-  const atributosRelacionamento3 = ['AR3-1', 'AR3-2', 'AR3-3']
-  const filtros = ['Filtro1', 'Filtro2', 'Filtro3']
-
-  const [tabelaPrincipal, setTabelaPrincipal] = useState('')
-  const [tabelasRelacionadas, setTabelasRelacionadas] = useState<string[]>([])
+  const [mainTable, setMainTable] = useState<string>('')
+  const [tabelasRelacionadas, setTabelasRelacionadas] = useState<string[]>([]) // armazena as tabelas que se relacionam com a tabela principal, para ser exibidas no select
+  const [relacionamentosSelecionados, setRelacionamentosSelecionados] = useState<string[]>([]) // armazena os relacionamentos selecionados pelo usuário
   const [filtrosSelecionados, setFiltrosSelecionados] = useState<string[]>([])
 
   const [showBackdrop, setShowBackdrop] = useState(false)
+
+  useEffect(() => {
+    console.log('------------------')
+    console.log('mainTable', mainTable)
+    console.log('tabelasRelacionadas', tabelasRelacionadas)
+    console.log('relacionamentosSelecionados', relacionamentosSelecionados)
+    console.log('filtrosSelecionados', filtrosSelecionados)
+  }, [mainTable, tabelasRelacionadas, relacionamentosSelecionados, filtrosSelecionados])
+
+  useEffect(() => {
+    mainTable === 'quests' && setTabelasRelacionadas(questRelacionamentos)
+    mainTable === 'items' && setTabelasRelacionadas(itemRelacionamentos)
+  }, [mainTable])
 
   return (
     <HomeContainer>
@@ -64,10 +85,11 @@ export function Home() {
           label="Selecione a tabela principal"
           placeholder="Selecione uma opção"
           size="sm"
+          helpGutter={false}
           onFocus={() => setShowBackdrop(true)}
           onBlur={() => setShowBackdrop(false)}
           onChange={(table) => {
-            setTabelaPrincipal(table)
+            setMainTable(table)
             setTabelasRelacionadas([])
           }}
         >
@@ -75,97 +97,78 @@ export function Home() {
             <SelectItem key={table} value={table} label={table} size="sm" style={{ zIndex: 5 }} />
           ))}
         </Select>
-        {tabelaPrincipal && (
-          <AttributesWrapper style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }}>
-            <h2>{tabelaPrincipal}</h2>
-            {attributes.map((attributes) => (
-              <Checkbox size="sm" key={attributes} label={attributes} />
-            ))}
-          </AttributesWrapper>
+        {mainTable && (
+          <TableInfoWrapper>
+            <AttributesWrapper style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }}>
+              <h2>{mainTable}: </h2>
+              {mainTable === 'quests' &&
+                questAttributes.map((attributes) => <Checkbox size="sm" key={attributes} label={attributes} />)}
+              {mainTable === 'items' &&
+                itemAttributes.map((attributes) => <Checkbox size="sm" key={attributes} label={attributes} />)}
+            </AttributesWrapper>
+          </TableInfoWrapper>
         )}
       </MainTableInfoWrapper>
-      {tabelaPrincipal && <Divider style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }} />}
-      {tabelaPrincipal && (
+      {mainTable && (
         <SelectorWrapper>
           <Select
-            label={"Selecione as tabelas que se relacionam com a tabela '" + tabelaPrincipal + "'"}
+            label={"Selecione as tabelas que se relacionam com a tabela '" + mainTable + "'"}
             placeholder="Selecionar"
             size="sm"
             multiple
-            value={tabelasRelacionadas}
+            helpGutter={false}
             onFocus={() => setShowBackdrop(true)}
             onBlur={() => setShowBackdrop(false)}
-            onChange={(tables) => setTabelasRelacionadas(tables)}
+            onChange={(tables) => setRelacionamentosSelecionados(tables)}
           >
-            {relacionamentos.map((tabela) => (
-              <SelectItem key={tabela} value={tabela} label={tabela} size="sm" style={{ zIndex: 5 }} />
+            {tabelasRelacionadas.map((table) => (
+              <SelectItem key={table} value={table} label={table} size="sm" style={{ zIndex: 5 }} />
             ))}
           </Select>
         </SelectorWrapper>
       )}
       <RelatedTablesWrapper>
-        {tabelasRelacionadas.includes('Relacionamento1') && (
-          <TableInfoWrapper style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }}>
-            <TitleWrapper>
-              <h2>Relacionamento 1</h2>
-              <IconButton
-                icon="Close"
-                color="ghost"
-                size="sm"
-                onClick={() =>
-                  setTabelasRelacionadas(tabelasRelacionadas.filter((tabela) => tabela !== 'Relacionamento1'))
-                }
-              />
-            </TitleWrapper>
+        {relacionamentosSelecionados.map((relacionamento) => (
+          <TableInfoWrapper
+            key={relacionamento}
+            style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }}
+          >
             <AttributesWrapper>
-              {atributosRelacionamento1.map((atributo) => (
-                <Checkbox key={atributo} label={atributo} size="sm" />
-              ))}
+              <h2>{relacionamento}: </h2>
+              {mainTable === 'quests' &&
+                (relacionamento === 'rewards'
+                  ? rewardsAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
+                  : relacionamento === 'requirements'
+                  ? requirementsAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
+                  : relacionamento === 'area'
+                  ? areaAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
+                  : null)}
+              {mainTable === 'items' &&
+                (relacionamento === 'itemClass'
+                  ? itemClassAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
+                  : relacionamento === 'itemSubClass'
+                  ? itemSubClassAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
+                  : relacionamento === 'itemStats'
+                  ? itemStatsAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
+                  : relacionamento === 'weaponStats'
+                  ? weaponStatsAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
+                  : null)}
             </AttributesWrapper>
+            <IconButton
+              icon="Trash"
+              color="ghost"
+              radius="square"
+              size="sm"
+              onClick={() =>
+                setRelacionamentosSelecionados(
+                  relacionamentosSelecionados.filter((tabela) => tabela !== relacionamento)
+                )
+              }
+              style={{ alignSelf: 'flex-end' }}
+            />
           </TableInfoWrapper>
-        )}
-        {tabelasRelacionadas.includes('Relacionamento2') && (
-          <TableInfoWrapper style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }}>
-            <TitleWrapper>
-              <h2>Relacionamento 2</h2>
-              <IconButton
-                icon="Close"
-                color="ghost"
-                size="sm"
-                onClick={() =>
-                  setTabelasRelacionadas(tabelasRelacionadas.filter((tabela) => tabela !== 'Relacionamento2'))
-                }
-              />
-            </TitleWrapper>
-            <AttributesWrapper>
-              {atributosRelacionamento2.map((atributo) => (
-                <Checkbox key={atributo} label={atributo} size="sm" />
-              ))}
-            </AttributesWrapper>
-          </TableInfoWrapper>
-        )}
-        {tabelasRelacionadas.includes('Relacionamento3') && (
-          <TableInfoWrapper style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }}>
-            <TitleWrapper>
-              <h2>Relacionamento 3</h2>
-              <IconButton
-                icon="Close"
-                color="ghost"
-                size="sm"
-                onClick={() =>
-                  setTabelasRelacionadas(tabelasRelacionadas.filter((tabela) => tabela !== 'Relacionamento3'))
-                }
-              />
-            </TitleWrapper>
-            <AttributesWrapper>
-              {atributosRelacionamento3.map((atributo) => (
-                <Checkbox key={atributo} label={atributo} size="sm" />
-              ))}
-            </AttributesWrapper>
-          </TableInfoWrapper>
-        )}
+        ))}
       </RelatedTablesWrapper>
-      <Divider style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }} />
       <FiltersContainer>
         <h2>Filtros</h2>
         <Select
@@ -178,13 +181,17 @@ export function Home() {
           onFocus={() => setShowBackdrop(true)}
           onBlur={() => setShowBackdrop(false)}
         >
-          {filtros.map((filtro) => (
-            <SelectItem key={filtro} value={filtro} label={filtro} size="sm" style={{ zIndex: 5 }} />
-          ))}
+          {questAttributes.map(
+            (
+              filtro // TODO: trocar aqui para incluir os atributos de todas as tabelas principais e relacionadas
+            ) => (
+              <SelectItem key={filtro} value={filtro} label={filtro} size="sm" style={{ zIndex: 5 }} />
+            )
+          )}
         </Select>
         {filtrosSelecionados.map((filtro) => (
           <FilterWrapper key={filtro}>
-            <h2>{filtro}:</h2>
+            <h2 style={{ width: 250 }}>{filtro}:</h2>
             <Select
               label="Operador"
               size="sm"
@@ -210,7 +217,6 @@ export function Home() {
           </FilterWrapper>
         ))}
       </FiltersContainer>
-      <Divider style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }} />
       <Button
         color="primary"
         label="Buscar"

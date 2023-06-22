@@ -6,7 +6,7 @@ export const GlobalStyle = createGlobalStyle`
     padding: 0;
     box-sizing: border-box;
 
-    font-family: 'Ubuntu', 'Open Sans', sans-serif;
+    font-family: 'Open Sans', sans-serif;
     line-height: 1.5;
     font-weight: 400;
 

@@ -1,56 +1,14 @@
-export interface IQuest {
-  id: number
-  title: string
-  area: number
-  description: string
-  requirements: number
-  rewards: number
-}
+export const tables = ['quests', 'items']
 
-export const questFilters = ['title', 'area', 'description', 'requirements', 'rewards']
-export const questFiltersAdvanced = [
-  'area.id',
-  'area.name',
-  'requirements.id',
-  'requirements.maxCharacterLevel',
-  'requirements.minCharacterLevel',
-  'requirements.faction',
-  'rewards.id',
-  'rewards.experience',
-  'rewards.money',
-  'rewards.reputations',
-  'rewards.items'
-]
+// -------------------------------------------------------------------------------- //
 
-// export const areaOptions = ['id', 'name']
+export const questRelacionamentos = ['rewards', 'requirements', 'area']
+export const itemRelacionamentos = ['itemClass', 'itemSubClass', 'itemStats', 'weaponStats']
 
-// export const rewardsOptions = ['id', 'experience', 'money', 'reputations', 'items']
-// export const requirementsOptions = ['id', 'maxCharacterLevel', 'minCharacterLevel', 'faction']
+// -------------------------------------------------------------------------------- //
 
-export interface IItem {
-  id: number
-  binding: string
-  durability: number
-  inventoryType: string
-  isEquippable: boolean
-  isStackable: boolean
-  itemClass: number
-  itemSubClass: number
-  itemStats: number
-  level: number
-  maxCount: number
-  name: string
-  purchasePrice: number
-  purchaseQuantity: number
-  quality: number
-  requiredLevel: number
-  sellPrice: number
-  spells: number[]
-  uniqueEquipped: boolean
-  weaponStats: number
-}
-
-export const itemFilters = [
+export const questAttributes = ['id', 'title', 'description', 'rewards', 'requirements', 'area']
+export const itemAttributes = [
   'binding',
   'durability',
   'inventoryType',
@@ -72,10 +30,13 @@ export const itemFilters = [
   'weaponStats'
 ]
 
-export const itemFiltersAdvanced = ['itemClass', 'itemSubClass', 'itemStats', 'weaponStats']
-export const itemClassOptions = ['id', 'name']
-export const itemSubClassOptions = ['id', 'name']
-export const itemStatsOptions = [
+export const rewardsAttributes = ['id', 'experience', 'money', 'reputation', 'items']
+export const requirementsAttributes = ['id', 'max_character_level', 'min_character_level', 'faction']
+export const areaAttributes = ['id', 'name']
+
+export const itemClassAttributes = ['id', 'name']
+export const itemSubClassAttributes = ['id', 'name']
+export const itemStatsAttributes = [
   'id',
   'agility',
   'avoidance',
@@ -94,6 +55,4 @@ export const itemStatsOptions = [
   'strength',
   'versatility'
 ]
-export const weaponStatsOptions = ['minDamage', 'maxDamage', 'damageClass']
-
-export const searchByOptions = ['quest', 'item']
+export const weaponStatsAttributes = ['minDamage', 'maxDamage', 'damageClass']
