@@ -113,7 +113,18 @@ export const FiltersContainer = styled.div`
   align-items: flex-start;
   justify-content: flex-start;
   gap: 15px;
-  width: 50%;
+  width: 100%;
+
+  & > *:nth-child(2) {
+    width: 70%;
+  }
+`
+
+export const FiltersForm = styled.form`
+  width: 70%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `
 
 export const FilterWrapper = styled.div`
@@ -125,7 +136,7 @@ export const FilterWrapper = styled.div`
   width: 100%;
 
   & > *:nth-child(2) {
-    width: 20%;
+    width: 40%;
   }
 `
 
@@ -135,4 +146,23 @@ export const TitleWrapper = styled.div`
   align-items: center;
   justify-content: flex-start;
   gap: 15px;
+`
+
+export const ButtonSubmit = styled.button`
+  width: 100px;
+  height: 40px;
+  border-radius: 5px;
+  border: none;
+  padding: 5px 10px;
+  background-color: ${(props) => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.neutralL5};
+  ${(props) => props.theme.fonts.labelMD};
+  transition: all 0.2s ease-in-out;
+
+  align-self: center;
+  margin-top: 20px;
+
+  &:hover {
+    background-color: ${(props) => props.theme.colors.primaryL1};
+  }
 `

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 
-// import { Button, Select, SelectItem, Checkbox } from '@nexds/web'
-
-import { Button, Checkbox, Select, SelectItem, TextField, IconButton } from '@nexds/web'
+import { Checkbox, Select, SelectItem, TextField, IconButton, Combobox } from '@nexds/web'
 
 import {
   tables,
@@ -16,12 +15,17 @@ import {
   itemClassAttributes,
   itemStatsAttributes,
   itemSubClassAttributes,
-  weaponStatsAttributes
+  weaponStatsAttributes,
+  questFilters,
+  itemFilters
 } from '../constants'
+import { getOperatorSymbol } from '../utils/filters'
 import {
   AttributesWrapper,
   BackgroundImage,
+  ButtonSubmit,
   FiltersContainer,
+  FiltersForm,
   FilterWrapper,
   HeaderImage,
   HomeContainer,
@@ -53,26 +57,59 @@ import {
     1. A mainTable diz qual API deve ser chamada.
 */
 
+type attributeData = {
+  operator: string
+  value: string
+}
+
+type tableData = Record<string, attributeData>
+
+type formData = Record<string, tableData>
+
 export function Home() {
   const [mainTable, setMainTable] = useState<string>('')
   const [tabelasRelacionadas, setTabelasRelacionadas] = useState<string[]>([]) // armazena as tabelas que se relacionam com a tabela principal, para ser exibidas no select
   const [relacionamentosSelecionados, setRelacionamentosSelecionados] = useState<string[]>([]) // armazena os relacionamentos selecionados pelo usuário
+  const [attributesToFilter, setAttributesToFilter] = useState<string[]>([]) // armazena os atributos que podem ser filtrados
   const [filtrosSelecionados, setFiltrosSelecionados] = useState<string[]>([])
 
   const [showBackdrop, setShowBackdrop] = useState(false)
 
-  useEffect(() => {
-    console.log('------------------')
-    console.log('mainTable', mainTable)
-    console.log('tabelasRelacionadas', tabelasRelacionadas)
-    console.log('relacionamentosSelecionados', relacionamentosSelecionados)
-    console.log('filtrosSelecionados', filtrosSelecionados)
-  }, [mainTable, tabelasRelacionadas, relacionamentosSelecionados, filtrosSelecionados])
+  // Para a API de quests:
+  const [attributesToSearch, setAttributesToSearch] = useState<string[]>([])
+  const [filtersToSearch, setFiltersToSearch] = useState<string[]>([])
+
+  const { register, handleSubmit } = useForm()
+
+  const handleAddFiltersFormData = (data: formData) => {
+    const formattedFilters = Object.entries(data)
+      .map((table) => {
+        const [tableName, tableData]: [string, tableData] = table
+        return Object.entries(tableData).map((attribute) => {
+          const [attributeName, attributeData]: [string, attributeData] = attribute
+          return `${tableName}.${attributeName}.${getOperatorSymbol(attributeData.operator)}.${attributeData.value}`
+        })
+      })
+      .flat()
+
+    console.log('formattedFilters: ', formattedFilters)
+    setFiltersToSearch(formattedFilters)
+  }
 
   useEffect(() => {
-    mainTable === 'quests' && setTabelasRelacionadas(questRelacionamentos)
-    mainTable === 'items' && setTabelasRelacionadas(itemRelacionamentos)
+    if (mainTable === 'quests') {
+      setTabelasRelacionadas(questRelacionamentos)
+      setAttributesToFilter(questFilters)
+    } else if (mainTable === 'items') {
+      setTabelasRelacionadas(itemRelacionamentos)
+      setAttributesToFilter(itemFilters)
+    }
   }, [mainTable])
+
+  const handleAddSelectedAttribute = (table: string, attribute: string) => {
+    const newAttribute = table + '.' + attribute
+    setAttributesToSearch((prevState) => [...prevState, newAttribute])
+  }
 
   return (
     <HomeContainer>
@@ -102,9 +139,23 @@ export function Home() {
             <AttributesWrapper style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }}>
               <h2>{mainTable}: </h2>
               {mainTable === 'quests' &&
-                questAttributes.map((attributes) => <Checkbox size="sm" key={attributes} label={attributes} />)}
+                questAttributes.map((attribute) => (
+                  <Checkbox
+                    size="sm"
+                    key={attribute}
+                    label={attribute}
+                    onChange={() => handleAddSelectedAttribute('quests', attribute)}
+                  />
+                ))}
               {mainTable === 'items' &&
-                itemAttributes.map((attributes) => <Checkbox size="sm" key={attributes} label={attributes} />)}
+                itemAttributes.map((attribute) => (
+                  <Checkbox
+                    size="sm"
+                    key={attribute}
+                    label={attribute}
+                    onChange={() => handleAddSelectedAttribute('items', attribute)}
+                  />
+                ))}
             </AttributesWrapper>
           </TableInfoWrapper>
         )}
@@ -176,55 +227,68 @@ export function Home() {
           placeholder="Selecionar"
           size="sm"
           multiple
+          maxDropdownRows={5}
           value={filtrosSelecionados}
-          onChange={(filters) => setFiltrosSelecionados(filters)}
+          onChange={(filtros) => setFiltrosSelecionados(filtros)}
           onFocus={() => setShowBackdrop(true)}
           onBlur={() => setShowBackdrop(false)}
         >
-          {questAttributes.map(
-            (
-              filtro // TODO: trocar aqui para incluir os atributos de todas as tabelas principais e relacionadas
-            ) => (
-              <SelectItem key={filtro} value={filtro} label={filtro} size="sm" style={{ zIndex: 5 }} />
-            )
-          )}
+          {attributesToFilter.map((attribute) => (
+            <SelectItem
+              key={attribute}
+              value={attribute}
+              label={attribute.split('.')[1]}
+              size="sm"
+              style={{ zIndex: 5 }}
+            />
+          ))}
         </Select>
+      </FiltersContainer>
+      <FiltersForm onSubmit={handleSubmit(handleAddFiltersFormData)}>
         {filtrosSelecionados.map((filtro) => (
           <FilterWrapper key={filtro}>
-            <h2 style={{ width: 250 }}>{filtro}:</h2>
-            <Select
+            <h2 style={{ width: 250 }}>{filtro.split('.')[1]}:</h2>
+            <Combobox
+              helpGutter={false}
               label="Operador"
               size="sm"
+              required
+              {...register(`${filtro}.operator`)}
               onFocus={() => setShowBackdrop(true)}
               onBlur={() => setShowBackdrop(false)}
             >
-              <SelectItem value="equals" label="=" size="sm" style={{ zIndex: 5 }} />
-              <SelectItem value="notEquals" label="!=" size="sm" style={{ zIndex: 5 }} />
-              <SelectItem value="gt" label=">" size="sm" style={{ zIndex: 5 }} />
-              <SelectItem value="gte" label=">=" size="sm" style={{ zIndex: 5 }} />
-              <SelectItem value="lt" label="<" size="sm" style={{ zIndex: 5 }} />
-              <SelectItem value="lte" label="<=" size="sm" style={{ zIndex: 5 }} />
-              <SelectItem value="contains" label="contém" size="sm" style={{ zIndex: 5 }} />
-              <SelectItem value="notContains" label="não contém" size="sm" style={{ zIndex: 5 }} />
-            </Select>
+              <SelectItem value="equals" label="=" size="sm" />
+              <SelectItem value="notEquals" label="!=" size="sm" />
+              <SelectItem value="gt" label=">" size="sm" />
+              <SelectItem value="gte" label=">=" size="sm" />
+              <SelectItem value="lt" label="<" size="sm" />
+              <SelectItem value="lte" label="<=" size="sm" />
+              <SelectItem value="contains" label="contém" size="sm" />
+              <SelectItem value="notContains" label="não contém" size="sm" />
+            </Combobox>
             <TextField
               label="Valor"
               placeholder="Digite o valor"
               size="sm"
+              required
+              {...register(`${filtro}.value`)}
               onFocus={() => setShowBackdrop(true)}
               onBlur={() => setShowBackdrop(false)}
+              helpGutter={false}
             />
           </FilterWrapper>
         ))}
-      </FiltersContainer>
-      <Button
-        color="primary"
-        label="Buscar"
-        variant="filled"
-        size="sm"
-        onPress={() => alert('Buscando...')}
-        style={{ alignSelf: 'center', marginTop: 20, opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }}
-      />
+        <ButtonSubmit
+          type="submit"
+          onClick={() => alert('Buscando...')}
+          style={{
+            opacity: showBackdrop ? 0.5 : 1,
+            zIndex: showBackdrop ? -1 : 0
+          }}
+        >
+          Buscar
+        </ButtonSubmit>
+      </FiltersForm>
     </HomeContainer>
   )
 }
