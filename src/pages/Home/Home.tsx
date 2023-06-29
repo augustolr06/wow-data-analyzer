@@ -2,24 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 
 import { Checkbox, Select, SelectItem, TextField, IconButton, Combobox } from '@nexds/web'
+import * as Table from '@nexds/web/dist/components/Table' // Table.BodyCol, Table.BodyRow, Table.HeaderCol, Table.HeaderRow, Table.Root
 
-import {
-  tables,
-  questAttributes,
-  questRelacionamentos,
-  itemRelacionamentos,
-  itemAttributes,
-  areaAttributes,
-  rewardsAttributes,
-  requirementsAttributes,
-  itemClassAttributes,
-  itemStatsAttributes,
-  itemSubClassAttributes,
-  weaponStatsAttributes,
-  questFilters,
-  itemFilters
-} from '../constants'
-import { getOperatorSymbol } from '../utils/filters'
+import { schemaHardcoded } from '@/services/getSchema'
+
+import { api } from '../../services/api'
+// import { getOperatorSymbol } from '../utils/filters'
 import {
   AttributesWrapper,
   BackgroundImage,
@@ -31,8 +19,11 @@ import {
   HomeContainer,
   MainTableInfoWrapper,
   RelatedTablesWrapper,
-  SelectorWrapper,
-  TableInfoWrapper
+  TableInfoWrapper,
+  Title,
+  Subtitle,
+  Selector,
+  ResultsContainer
 } from './Home.styles'
 
 /*
@@ -67,49 +58,76 @@ type tableData = Record<string, attributeData>
 type formData = Record<string, tableData>
 
 export function Home() {
-  const [mainTable, setMainTable] = useState<string>('')
-  const [tabelasRelacionadas, setTabelasRelacionadas] = useState<string[]>([]) // armazena as tabelas que se relacionam com a tabela principal, para ser exibidas no select
-  const [relacionamentosSelecionados, setRelacionamentosSelecionados] = useState<string[]>([]) // armazena os relacionamentos selecionados pelo usuário
-  const [attributesToFilter, setAttributesToFilter] = useState<string[]>([]) // armazena os atributos que podem ser filtrados
-  const [filtrosSelecionados, setFiltrosSelecionados] = useState<string[]>([])
+  const tables = schemaHardcoded.tables.slice()
 
-  const [showBackdrop, setShowBackdrop] = useState(false)
+  const [mainTable, setMainTable] = useState<string>('') // armazena a tabela principal selecionada pelo usuário
+  const [relatedTables, setRelatedTables] = useState<string[]>([])
+  const [selectedRelationships, setSelectedRelationships] = useState<string[]>([])
+
+  const [attributesToFilter, setAttributesToFilter] = useState<string[]>([]) // armazena os atributos que podem ser filtrados
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
 
   // Para a API de quests:
   const [attributesToSearch, setAttributesToSearch] = useState<string[]>([])
-  const [filtersToSearch, setFiltersToSearch] = useState<string[]>([])
+
+  const [results, setResults] = useState<any[]>([])
 
   const { register, handleSubmit } = useForm()
 
   const handleAddFiltersFormData = (data: formData) => {
+    console.log('data', data)
     const formattedFilters = Object.entries(data)
       .map((table) => {
         const [tableName, tableData]: [string, tableData] = table
         return Object.entries(tableData).map((attribute) => {
           const [attributeName, attributeData]: [string, attributeData] = attribute
-          return `${tableName}.${attributeName}.${getOperatorSymbol(attributeData.operator)}.${attributeData.value}`
+          return `${tableName}.${attributeName}.${attributeData.operator}.${attributeData.value}`
         })
       })
       .flat()
+    handleSearch(formattedFilters)
+  }
 
-    console.log('formattedFilters: ', formattedFilters)
-    setFiltersToSearch(formattedFilters)
+  const handleSearch = async (filtersToSearch: string[]) => {
+    console.log('filtersToSearch', filtersToSearch)
+    const paramAttributes = attributesToSearch.join(',')
+    const paramFilters = filtersToSearch.map((filter) => filter.replace(/ /g, '%20')).join(',')
+    let url = `/${mainTable}s/filters?attributes=${paramAttributes}`
+    if (paramFilters) {
+      url += `&filters=${paramFilters}`
+    }
+    console.log(url)
+    await api.get(url).then((response) => {
+      // setResults(response.data)
+      console.log('response.data', response.data)
+    })
   }
 
   useEffect(() => {
-    if (mainTable === 'quests') {
-      setTabelasRelacionadas(questRelacionamentos)
-      setAttributesToFilter(questFilters)
-    } else if (mainTable === 'items') {
-      setTabelasRelacionadas(itemRelacionamentos)
-      setAttributesToFilter(itemFilters)
+    setRelatedTables([])
+    setSelectedRelationships([])
+    setSelectedFilters([])
+    setAttributesToSearch([])
+    setAttributesToFilter([])
+
+    if (mainTable in schemaHardcoded.tableProperties) {
+      setRelatedTables(schemaHardcoded.tableProperties[mainTable].relationships)
+      setAttributesToFilter(schemaHardcoded.tableProperties[mainTable].filters)
     }
   }, [mainTable])
 
-  const handleAddSelectedAttribute = (table: string, attribute: string) => {
-    const newAttribute = table + '.' + attribute
-    setAttributesToSearch((prevState) => [...prevState, newAttribute])
+  const handleAttributeSelection = (table: string, attribute: string, action: 'add' | 'remove') => {
+    if (action === 'add') {
+      setAttributesToSearch((prevState) => [...prevState, `${table}.${attribute}`])
+    } else if (action === 'remove') {
+      setAttributesToSearch((prevState) => prevState.filter((attr) => attr !== `${table}.${attribute}`))
+    }
   }
+
+  useEffect(() => {
+    console.log('attributesToSearch', attributesToSearch)
+    console.log('selectedFilters', selectedFilters)
+  }, [attributesToSearch, selectedFilters])
 
   return (
     <HomeContainer>
@@ -117,121 +135,103 @@ export function Home() {
         <img src="/images/wow-header.webp" width={200} />
       </HeaderImage>
       <BackgroundImage />
+      <Title>Consulta</Title>
       <MainTableInfoWrapper>
         <Select
-          label="Selecione a tabela principal"
+          label="O que você deseja consultar?"
           placeholder="Selecione uma opção"
           size="sm"
+          value={mainTable}
           helpGutter={false}
-          onFocus={() => setShowBackdrop(true)}
-          onBlur={() => setShowBackdrop(false)}
-          onChange={(table) => {
-            setMainTable(table)
-            setTabelasRelacionadas([])
-          }}
+          onChange={(table) => setMainTable(table)}
         >
           {tables.map((table) => (
-            <SelectItem key={table} value={table} label={table} size="sm" style={{ zIndex: 5 }} />
+            <SelectItem key={table} value={table} label={table} size="sm" />
           ))}
         </Select>
         {mainTable && (
           <TableInfoWrapper>
-            <AttributesWrapper style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }}>
-              <h2>{mainTable}: </h2>
-              {mainTable === 'quests' &&
-                questAttributes.map((attribute) => (
+            <Subtitle>{mainTable}: </Subtitle>
+            <AttributesWrapper>
+              {schemaHardcoded.tableProperties[mainTable].attributes &&
+                schemaHardcoded.tableProperties[mainTable].attributes.map((attribute) => (
                   <Checkbox
                     size="sm"
                     key={attribute}
                     label={attribute}
-                    onChange={() => handleAddSelectedAttribute('quests', attribute)}
-                  />
-                ))}
-              {mainTable === 'items' &&
-                itemAttributes.map((attribute) => (
-                  <Checkbox
-                    size="sm"
-                    key={attribute}
-                    label={attribute}
-                    onChange={() => handleAddSelectedAttribute('items', attribute)}
+                    onChange={(event) =>
+                      event.target.checked
+                        ? handleAttributeSelection(mainTable, attribute, 'add')
+                        : handleAttributeSelection(mainTable, attribute, 'remove')
+                    }
                   />
                 ))}
             </AttributesWrapper>
+            <IconButton icon="Trash" color="ghost" radius="square" size="sm" onClick={() => setMainTable('')} />
           </TableInfoWrapper>
         )}
       </MainTableInfoWrapper>
       {mainTable && (
-        <SelectorWrapper>
+        <Selector>
           <Select
-            label={"Selecione as tabelas que se relacionam com a tabela '" + mainTable + "'"}
+            label="Deseja adicionar mais informações?"
             placeholder="Selecionar"
             size="sm"
             multiple
+            value={selectedRelationships}
             helpGutter={false}
-            onFocus={() => setShowBackdrop(true)}
-            onBlur={() => setShowBackdrop(false)}
-            onChange={(tables) => setRelacionamentosSelecionados(tables)}
+            onChange={(relationships) => setSelectedRelationships(relationships)}
           >
-            {tabelasRelacionadas.map((table) => (
+            {relatedTables.map((table) => (
               <SelectItem key={table} value={table} label={table} size="sm" style={{ zIndex: 5 }} />
             ))}
           </Select>
-        </SelectorWrapper>
+        </Selector>
       )}
       <RelatedTablesWrapper>
-        {relacionamentosSelecionados.map((relacionamento) => (
-          <TableInfoWrapper
-            key={relacionamento}
-            style={{ opacity: showBackdrop ? 0.5 : 1, zIndex: showBackdrop ? -1 : 0 }}
-          >
-            <AttributesWrapper>
-              <h2>{relacionamento}: </h2>
-              {mainTable === 'quests' &&
-                (relacionamento === 'rewards'
-                  ? rewardsAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
-                  : relacionamento === 'requirements'
-                  ? requirementsAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
-                  : relacionamento === 'area'
-                  ? areaAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
-                  : null)}
-              {mainTable === 'items' &&
-                (relacionamento === 'itemClass'
-                  ? itemClassAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
-                  : relacionamento === 'itemSubClass'
-                  ? itemSubClassAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
-                  : relacionamento === 'itemStats'
-                  ? itemStatsAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
-                  : relacionamento === 'weaponStats'
-                  ? weaponStatsAttributes.map((attribute) => <Checkbox key={attribute} label={attribute} size="sm" />)
-                  : null)}
-            </AttributesWrapper>
-            <IconButton
-              icon="Trash"
-              color="ghost"
-              radius="square"
-              size="sm"
-              onClick={() =>
-                setRelacionamentosSelecionados(
-                  relacionamentosSelecionados.filter((tabela) => tabela !== relacionamento)
-                )
-              }
-              style={{ alignSelf: 'flex-end' }}
-            />
-          </TableInfoWrapper>
-        ))}
+        {selectedRelationships.length > 0 &&
+          selectedRelationships.map((relationships) => (
+            <TableInfoWrapper key={relationships}>
+              <Subtitle>{relationships}: </Subtitle>
+              <AttributesWrapper>
+                {schemaHardcoded.tableProperties[relationships].attributes &&
+                  schemaHardcoded.tableProperties[relationships].attributes.map((attribute) => (
+                    <Checkbox
+                      key={attribute}
+                      label={attribute}
+                      size="sm"
+                      onChange={(event) =>
+                        event.target.checked
+                          ? handleAttributeSelection(relationships, attribute, 'add')
+                          : handleAttributeSelection(relationships, attribute, 'remove')
+                      }
+                    />
+                  ))}
+              </AttributesWrapper>
+              <IconButton
+                icon="Trash"
+                color="ghost"
+                radius="square"
+                size="sm"
+                onClick={() => {
+                  setSelectedRelationships(selectedRelationships.filter((table) => table !== relationships))
+                  setAttributesToSearch(attributesToSearch.filter((attr) => !attr.includes(relationships)))
+                }}
+              />
+            </TableInfoWrapper>
+          ))}
       </RelatedTablesWrapper>
       <FiltersContainer>
-        <h2>Filtros</h2>
+        <Title>Filtros</Title>
         <Select
           label="Selecione o atributo"
           placeholder="Selecionar"
+          helpMessage={selectedFilters.length > 0 ? 'dica: para remover um filtro basta clicar nele acima' : ''}
           size="sm"
           multiple
           maxDropdownRows={5}
-          value={filtrosSelecionados}
-          onChange={(filtros) => setFiltrosSelecionados(filtros)}
-          onFocus={() => setShowBackdrop(true)}
-          onBlur={() => setShowBackdrop(false)}
+          value={selectedFilters}
+          onChange={(filtros) => setSelectedFilters(filtros)}
         >
           {attributesToFilter.map((attribute) => (
             <SelectItem
@@ -245,50 +245,59 @@ export function Home() {
         </Select>
       </FiltersContainer>
       <FiltersForm onSubmit={handleSubmit(handleAddFiltersFormData)}>
-        {filtrosSelecionados.map((filtro) => (
-          <FilterWrapper key={filtro}>
-            <h2 style={{ width: 250 }}>{filtro.split('.')[1]}:</h2>
+        {selectedFilters.length > 0 && (
+          <FilterWrapper>
+            <Title>Atributo</Title>
+            <Title style={{ zIndex: 0 }}>Operador</Title>
+            <Title>Valor</Title>
+          </FilterWrapper>
+        )}
+        {selectedFilters.map((filter, index) => (
+          <FilterWrapper key={filter} operatorZIndex={index}>
+            <Subtitle style={{ width: 250 }}>{filter.split('.')[1]}</Subtitle>
             <Combobox
               helpGutter={false}
-              label="Operador"
               size="sm"
-              required
-              {...register(`${filtro}.operator`)}
-              onFocus={() => setShowBackdrop(true)}
-              onBlur={() => setShowBackdrop(false)}
+              pattern="(equals|notEquals|gt|gte|lt|lte|contains|notContains)"
+              {...register(`${filter}.operator`, { required: true })}
             >
-              <SelectItem value="equals" label="=" size="sm" />
-              <SelectItem value="notEquals" label="!=" size="sm" />
-              <SelectItem value="gt" label=">" size="sm" />
-              <SelectItem value="gte" label=">=" size="sm" />
-              <SelectItem value="lt" label="<" size="sm" />
-              <SelectItem value="lte" label="<=" size="sm" />
-              <SelectItem value="contains" label="contém" size="sm" />
-              <SelectItem value="notContains" label="não contém" size="sm" />
+              <SelectItem value="equals" label="equals" size="sm" />
+              <SelectItem value="notEquals" label="notEquals" size="sm" />
+              <SelectItem value="gt" label="gt" size="sm" />
+              <SelectItem value="gte" label="gte" size="sm" />
+              <SelectItem value="lt" label="lt" size="sm" />
+              <SelectItem value="lte" label="lte" size="sm" />
+              <SelectItem value="contains" label="contains" size="sm" />
+              <SelectItem value="notContains" label="notContains" size="sm" />
             </Combobox>
-            <TextField
-              label="Valor"
-              placeholder="Digite o valor"
-              size="sm"
-              required
-              {...register(`${filtro}.value`)}
-              onFocus={() => setShowBackdrop(true)}
-              onBlur={() => setShowBackdrop(false)}
-              helpGutter={false}
-            />
+            <TextField size="sm" {...register(`${filter}.value`, { required: true })} helpGutter={false} />
           </FilterWrapper>
         ))}
-        <ButtonSubmit
-          type="submit"
-          onClick={() => alert('Buscando...')}
-          style={{
-            opacity: showBackdrop ? 0.5 : 1,
-            zIndex: showBackdrop ? -1 : 0
-          }}
-        >
-          Buscar
-        </ButtonSubmit>
+        <ButtonSubmit type="submit">Buscar</ButtonSubmit>
       </FiltersForm>
+      {results.length > 0 && (
+        <ResultsContainer>
+          <Title>Resultados</Title>
+          <Table.Root>
+            <header>
+              <Table.HeaderRow>
+                {attributesToSearch.map((attribute) => (
+                  <Table.HeaderCol key={attribute} label={attribute.split('.')[1]} />
+                ))}
+              </Table.HeaderRow>
+            </header>
+            <body>
+              {results.map((result) => (
+                <Table.BodyRow key={result.id}>
+                  {attributesToSearch.map((attribute) => (
+                    <Table.BodyCol key={attribute} content={result[attribute.split('.')[1]]} />
+                  ))}
+                </Table.BodyRow>
+              ))}
+            </body>
+          </Table.Root>
+        </ResultsContainer>
+      )}
     </HomeContainer>
   )
 }

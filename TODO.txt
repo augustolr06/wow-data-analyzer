@@ -1,0 +1,18 @@
+ Próximos passos:
+
+ * verificar se os nomes dos operadores são entendidos pelo Prisma;
+ * fazer com que a exibição dos atributos das tabelas relacionadas seja mais dinâmico;
+ * pegar as tabelas, atributos e relacionamentos pela API;
+ * testar se a interação com a interface do usuário funciona para todas as tabelas;
+ * tentar impedir o usuário de submeter um campo vazio;
+* escolher as opções que desabilitam o botão de busca;
+* controlar os campos de input;
+* verificar os estados que podem ser removidos;
+* para ras tabelas que não tiverem relacionamentos, não exibir o selector;
+
+
+
+* --- Primeiro teste --- *
+{{ _.BASE_URL }}/quest/filters?attributes=quest.title,quest_rewards.money,quest_rewards.experience,quest_requirements.max_character_level,quest_requirements.min_character_level&filters=quest.title.contains.Jovens%20amantes
+
+/quests/filters?attributes=quest.title,quest_rewards.money,quest_rewards.experience,quest_requirements.max_character_level,quest_requirements.min_character_level&filters=quest.title.contains.Jovens%20amantes

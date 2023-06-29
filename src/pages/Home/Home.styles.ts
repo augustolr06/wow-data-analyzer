@@ -13,7 +13,7 @@ export const BackgroundImage = styled.div`
   background-position: center;
   background-repeat: repeat-y;
   background-attachment: fixed;
-  opacity: 0.2;
+  opacity: 0.1;
 `
 
 export const HeaderImage = styled.div`
@@ -27,55 +27,47 @@ export const HeaderImage = styled.div`
 export const HomeContainer = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   min-height: calc(100vh - 20px);
-  padding: 16px;
 
-  width: 100%;
+  width: 70%;
   max-width: 1600px;
   margin: 0 auto;
   gap: 15px;
 `
 
-interface BackdropProps {
-  show: boolean
-}
-
-export const Backdrop = styled.div<BackdropProps>`
-  position: absolute;
-  top: 0;
-  left: 0;
+export const Title = styled.h2`
+  font-size: 25px;
+  font-weight: 700;
+  background-color: ${(props) => `${props.theme.colors.secondaryD3}60`};
+  text-align: center;
+  border-radius: 10px;
   width: 100%;
-  height: 100%;
-  background-color: ${(props) => props.theme.colors.secondaryD3};
-  z-index: ${(props) => (props.show ? 4 : -1)};
-  opacity: ${(props) => (props.show ? 0.5 : 0)};
+`
+
+export const Subtitle = styled.h3`
+  font-size: 18px;
+  font-weight: 700;
+  text-align: flex-start;
+`
+
+export const Selector = styled.div`
+  width: 100%;
+  z-index: 5;
 `
 
 export const MainTableInfoWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   gap: 15px;
   width: 100%;
 
   & > *:first-child {
-    width: 70%;
+    z-index: 61;
   }
-`
-
-export const SelectorWrapper = styled.div`
-  width: 40%;
-`
-
-export const Divider = styled.hr`
-  margin: 15px 0 20px;
-  width: 98%;
-  align-self: center;
-  border: 1px solid ${(props) => props.theme.colors.secondaryL2};
-  opacity: 0;
 `
 
 export const RelatedTablesWrapper = styled.div`
@@ -86,7 +78,7 @@ export const RelatedTablesWrapper = styled.div`
 `
 
 export const TableInfoWrapper = styled.div`
-  width: 100%;
+  min-width: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -95,7 +87,7 @@ export const TableInfoWrapper = styled.div`
   width: 100%;
   padding: 10px;
   border-radius: 5px;
-  background-color: ${(props) => `${props.theme.colors.neutralL0}30`};
+  background-color: ${(props) => props.theme.colors.secondaryD1};
 `
 
 export const AttributesWrapper = styled.div`
@@ -103,49 +95,58 @@ export const AttributesWrapper = styled.div`
   flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   gap: 15px;
 `
 
 export const FiltersContainer = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   gap: 15px;
   width: 100%;
+  margin-top: 80px;
 
   & > *:nth-child(2) {
-    width: 70%;
+    z-index: 60;
   }
 `
 
 export const FiltersForm = styled.form`
-  width: 70%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
 `
 
-export const FilterWrapper = styled.div`
+interface FilterWrapperProps {
+  operatorZIndex?: number
+}
+
+export const FilterWrapper = styled.div<FilterWrapperProps>`
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 15px;
   width: 100%;
 
-  & > *:nth-child(2) {
-    width: 40%;
+  & > *:first-child {
+    flex: 1;
+    overflow: hidden;
+    text-decoration: none;
+    text-overflow: ellipsis;
   }
-`
 
-export const TitleWrapper = styled.div`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 15px;
+  & > *:nth-child(2) {
+    flex: 1;
+    z-index: calc(50 - ${(props) => props.operatorZIndex});
+  }
+
+  & > *:nth-child(3) {
+    flex: 1;
+  }
 `
 
 export const ButtonSubmit = styled.button`
@@ -166,3 +167,5 @@ export const ButtonSubmit = styled.button`
     background-color: ${(props) => props.theme.colors.primaryL1};
   }
 `
+
+export const ResultsContainer = styled.div``
