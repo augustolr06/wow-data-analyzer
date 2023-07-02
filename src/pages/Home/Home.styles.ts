@@ -1,13 +1,12 @@
 import styled from 'styled-components'
 
 export const BackgroundImage = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   z-index: -1;
-
   width: 100%;
-  height: 300vh;
+  min-height: 100vh;
   background-image: url('/images/wow-bg-1.jpg');
   background-size: cover;
   background-position: center;
@@ -168,4 +167,15 @@ export const ButtonSubmit = styled.button`
   }
 `
 
-export const ResultsContainer = styled.div``
+export const ResultsContainer = styled.div`
+  width: 100%;
+  margin: 20px;
+`
+
+export const Tag = styled.div`
+  width: fit-content;
+  height: auto;
+  background-color: ${(props) => props.theme.colors.primary};
+  color: ${(props) => props.theme.colors.neutralL5};
+  margin-bottom: 5px;
+`

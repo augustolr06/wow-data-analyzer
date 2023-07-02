@@ -1,132 +1,125 @@
-// import { api } from './api'
+import { api } from './api'
 
 export interface ITableProperties {
   attributes: string[]
   relationships: string[]
-  filters: string[]
+  filters: IFilters[]
 }
 
 export type TTable = Record<string, ITableProperties>
+
+interface ITables {
+  tables: string[]
+}
+
+interface IColumns {
+  columns: string[]
+}
+
+interface IRelationships {
+  relationships: string[]
+}
+
+export interface IFilters {
+  name: string
+  type: string
+}
+
+export interface IEnums {
+  bindingtype: string[]
+  inventorytype: string[]
+  itemclass: string[]
+  itemsubclass: string[]
+  damagetype: string[]
+
+  [key: string]: string[]
+}
 
 export interface ISchema {
   tables: string[]
   tableProperties: TTable
 }
 
-export const schemaHardcoded: ISchema = {
-  tables: ['quest', 'item', 'quest_rewards', 'quest_requirements', 'area', 'item_stats', 'weapon_stats'],
-  tableProperties: {
-    quest: {
-      attributes: ['id', 'title', 'description', 'rewards', 'requirements', 'area'],
-      relationships: ['quest_rewards', 'quest_requirements', 'area'],
-      filters: [
-        'quest.title',
-        'rewards.experience',
-        'rewards.money',
-        'requirements.max_character_level',
-        'requirements.min_character_level',
-        'requirements.faction',
-        'area.name'
-      ]
-    },
-    item: {
-      attributes: [
-        'binding',
-        'durability',
-        'inventoryType',
-        'isEquippable',
-        'isStackable',
-        'itemClass',
-        'itemSubClass',
-        'itemStats',
-        'level',
-        'maxCount',
-        'name',
-        'purchasePrice',
-        'purchaseQuantity',
-        'quality',
-        'requiredLevel',
-        'sellPrice',
-        'spells',
-        'uniqueEquipped',
-        'weaponStats'
-      ],
-      relationships: ['item_stats', 'weapon_stats'],
-      filters: [
-        'item.binding',
-        'item.durability',
-        'item.level',
-        'item.maxCount',
-        'item.name',
-        'item.purchasePrice',
-        'itemSubClass.name',
-        'itemClass.name',
-        'itemStats.agility',
-        'itemStats.avoidance',
-        'itemStats.intellect',
-        'itemStats.leech',
-        'itemStats.parry',
-        'itemStats.stamina',
-        'itemStats.strength',
-        'weaponStats.minDamage',
-        'weaponStats.maxDamage',
-        'weaponStats.damageClass'
-      ]
-    },
-    quest_rewards: {
-      attributes: ['id', 'experience', 'money', 'reputations', 'items'],
-      relationships: ['item'],
-      filters: ['quest_rewards.experience', 'quest_rewards.money', 'item.name']
-    },
-    quest_requirements: {
-      attributes: ['id', 'min_character_level', 'max_character_level', 'faction'],
-      relationships: [''],
-      filters: [
-        'quest_requirements.min_character_level',
-        'quest_requirements.max_character_level',
-        'quest_requirements.faction'
-      ]
-    },
-    area: {
-      attributes: ['id', 'name'],
-      relationships: [''],
-      filters: ['id', 'area.name']
-    },
-    item_stats: {
-      attributes: [
-        'id',
-        'agility',
-        'avoidance',
-        'criticalStrike',
-        'fireResistance',
-        'frostResistance',
-        'haste',
-        'intellect',
-        'leech',
-        'mana',
-        'mastery',
-        'natureResistance',
-        'parry',
-        'shadowResistance',
-        'stamina',
-        'strength',
-        'versatility'
-      ],
-      relationships: [''],
-      filters: [
-        'itemStats.agility',
-        'itemStats.avoidance',
-        'itemStats.intellect',
-        'itemStats.leech',
-        'itemStats.parry',
-        'itemStats.stamina',
-        'itemStats.strength'
-      ]
-    },
-    weapon_stats: {
-      attributes: ['id', 'min_damage', 'max_damage', 'damage_class'],
-      relationships: [''],
-      filters: ['weaponStats.minDamage', 'weaponStats.maxDamage', 'weaponStats.damageClass']
+// 1. Obter os nomes das tabelas do banco através do endpoint general/tables
+// 2. Obter os nomes das colunas de cada tabela através do endpoint general/columns
+// 3. Obter os nomes das relações de cada tabela através do endpoint general/relationships
+// 4. Obter os filtros de cada tabela através do endpoint general/filters
+// 5. Obter os valores de todos os enums e armazenar em um objeto de acordo com o type TEnums
+// 6. Armazenar os dados em um objeto de acordo com a interface ISchema
+
+// 1:
+const getTables = async (): Promise<ITables> => {
+  const response = await api.get('/general/tables')
+  return response.data
+}
+
+// 2:
+const getColumns = async (table: string): Promise<IColumns> => {
+  const response = await api.get(`/general/columns/${table}`)
+  return response.data
+}
+
+// 3:
+const getRelationships = async (table: string): Promise<IRelationships> => {
+  const response = await api.get(`/general/relationships/${table}`)
+  return response.data
+}
+
+// 4:
+const getFilters = async (table: string): Promise<IFilters[]> => {
+  const response = await api.get(`/general/filters/${table}`)
+  return response.data
+}
+
+// 5:
+
+export const getEnums = async (): Promise<IEnums> => {
+  const response = await api.get('/general/enums')
+  return {
+    bindingtype: response.data.bindingtype,
+    inventorytype: response.data.inventorytype,
+    itemclass: response.data.itemclass,
+    itemsubclass: response.data.itemsubclass,
+    damagetype: response.data.damagetype
+  }
+}
+
+// 6:
+export const getSchema = async (): Promise<ISchema> => {
+  const tables = (await getTables()).tables
+
+  if (!tables) {
+    throw new Error('Não foi possível obter os nomes das tabelas')
+  }
+
+  const tableProperties: TTable = {}
+
+  for (const table of tables) {
+    const columns = (await getColumns(table)).columns
+    const relationships = (await getRelationships(table)).relationships.filter((relationship) => relationship !== null)
+    const filters = await getFilters(table)
+
+    // cada tabela deve incluir, nos filtros, os atributos das tabelas relacionadas
+
+    for (const relationship of relationships) {
+      const relatedColumns = (await getColumns(relationship)).columns.filter((column) => column !== 'id')
+      for (const relatedColumn of relatedColumns) {
+        filters.push({
+          name: `${relationship}.${relatedColumn}`,
+          type: 'string'
+        })
+      }
     }
+
+    tableProperties[table] = {
+      attributes: columns,
+      relationships,
+      filters
+    }
+  }
+
+  return {
+    tables,
+    tableProperties
   }
 }
