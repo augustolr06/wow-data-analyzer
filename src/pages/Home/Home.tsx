@@ -389,7 +389,12 @@ export function Home() {
                       results[0][key] &&
                       Object.keys(results[0][key]).map((item, index) => {
                         if (Number.isNaN(Number(item))) {
-                          return <Table.HeaderCol key={index} label={`${item} de ${key}`} />
+                          return (
+                            <Table.HeaderCol
+                              key={index}
+                              label={key === 'area_quest_areaToarea' ? `${item} de area` : `${item} de ${key}`}
+                            />
+                          )
                         } else if (index === 0) return <Table.HeaderCol key={index} label={`id de ${key}`} />
                       })
                     )
