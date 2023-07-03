@@ -412,7 +412,7 @@ export function Home() {
                       return (
                         <Table.BodyCol
                           key={index}
-                          content="[null]"
+                          content="[ null ]"
                           align="left"
                           minWidth="80px"
                           style={{ whiteSpace: 'nowrap' }}
@@ -436,7 +436,7 @@ export function Home() {
                             return (
                               <Table.BodyCol
                                 key={index}
-                                content={item}
+                                content={item.length === 0 ? '[ null ]' : item.join(', ')}
                                 align="left"
                                 minWidth="50px"
                                 style={{ whiteSpace: 'nowrap' }}
