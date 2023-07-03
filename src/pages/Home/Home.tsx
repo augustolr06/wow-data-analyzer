@@ -8,6 +8,7 @@ import { getSchema, getEnums, ISchema, IFilters, IEnums } from '@/services/getSc
 
 import { api } from '../../services/api'
 // import { getOperatorSymbol } from '../utils/filters'
+import { Graph } from '../Graph'
 import {
   AttributesWrapper,
   BackgroundImage,
@@ -23,7 +24,8 @@ import {
   Title,
   Subtitle,
   Selector,
-  ResultsContainer
+  ResultsContainer,
+  GraphContainer
 } from './Home.styles'
 
 /*
@@ -103,6 +105,8 @@ export function Home() {
 
   const [results, setResults] = useState([])
 
+  const [showGraph, setShowGraph] = useState(false)
+
   const {
     register,
     handleSubmit,
@@ -123,6 +127,10 @@ export function Home() {
   useEffect(() => {
     console.log('attributesToSearch', attributesToSearch)
   }, [attributesToSearch])
+
+  useEffect(() => {
+    setShowGraph(false)
+  }, [mainTable])
 
   useEffect(() => {
     handleClear(false, false)
@@ -184,6 +192,10 @@ export function Home() {
     await api.get(url).then((response) => {
       setResults(response.data)
     })
+  }
+
+  const handleShowGraph = () => {
+    setShowGraph(!showGraph)
   }
 
   return (
@@ -419,6 +431,20 @@ export function Home() {
             size="sm"
             onPress={() => handleClear(true, true)}
           />
+          <Button color="primary" variant="outline" label="Mostrar no Graph" size="sm" onPress={handleShowGraph} />
+
+          {results.length > 0 && showGraph && (
+            <GraphContainer>
+              <h1>Gráfico</h1>
+              <Graph
+                database={results}
+                quantity={results.length}
+                hAxisTitle={Object.keys(results[0])[0]}
+                vAxisTitle={mainTable}
+                attribute={Object.keys(results[0])[0]}
+              />
+            </GraphContainer>
+          )}
         </HomeContainer>
       )}
       {results.length > 0 && (

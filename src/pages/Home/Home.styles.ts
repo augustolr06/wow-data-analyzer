@@ -188,3 +188,12 @@ export const Tag = styled.div`
   color: ${(props) => props.theme.colors.neutralL5};
   margin-bottom: 5px;
 `
+
+export const GraphContainer = styled.div`
+  width: 100%;
+  height: 100vh;
+  margin-top: 80px;
+  background-color: ${(props) => props.theme.colors.secondaryD1};
+  border-radius: 10px;
+  padding: 20px;
+`
