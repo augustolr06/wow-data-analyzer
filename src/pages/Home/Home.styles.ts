@@ -163,14 +163,22 @@ export const ButtonSubmit = styled.button`
   align-self: center;
   margin-top: 20px;
 
-  &:hover {
+  &:not(:disabled):hover {
     background-color: ${(props) => props.theme.colors.primaryL1};
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `
 
 export const ResultsContainer = styled.div`
   max-width: 200%;
-  width: 100%;
+  min-width: 90vw;
+  margin: 0 40px;
+  border: 1px solid ${(props) => props.theme.colors.neutralL2};
+  background-color: ${(props) => `${props.theme.colors.secondaryD1}90`};
 `
 
 export const Tag = styled.div`

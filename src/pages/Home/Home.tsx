@@ -104,15 +104,16 @@ export function Home() {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    reset
   } = useForm()
 
   useEffect(() => {
     console.log('attributesToSearch', attributesToSearch)
-  }, [attributesToSearch])
+    console.log('selectedFilters', selectedFilters)
+  }, [attributesToSearch, selectedFilters])
 
   useEffect(() => {
-    setMainTable('')
     const run = async () => {
       const schemaAPI = await getSchema()
       setSchema(schemaAPI)
@@ -135,12 +136,12 @@ export function Home() {
     }
   }, [results])
 
-  const handleClear = () => {
+  const handleClear = (clearResults?: boolean) => {
     setMainTable('')
     setSelectedRelationships([])
     setSelectedFilters([])
     setAttributesToSearch([])
-    setResults([])
+    clearResults && setResults([])
     setRelatedTables([])
     setAttributesToFilter([])
   }
@@ -164,6 +165,7 @@ export function Home() {
       })
       .flat()
     handleSearch(formattedFilters)
+    reset()
   }
 
   const handleSearch = async (filtersToSearch: string[]) => {
@@ -176,8 +178,8 @@ export function Home() {
     console.log('url', url)
     await api.get(url).then((response) => {
       setResults(response.data)
-      console.log('response.data', response.data)
     })
+    handleClear(false)
   }
 
   return (
@@ -230,7 +232,7 @@ export function Home() {
               </TableInfoWrapper>
             )}
           </MainTableInfoWrapper>
-          {mainTable && (
+          {mainTable && relatedTables.length > 0 && (
             <Selector>
               <Select
                 label="Deseja adicionar mais informações?"
@@ -314,7 +316,12 @@ export function Home() {
             {selectedFilters.map((filter, index) => (
               <FilterWrapper key={filter} operatorZIndex={index}>
                 <Subtitle style={{ width: 250 }}>{filter.split('.')[1]}</Subtitle>
-                <Combobox helpGutter={false} size="sm" {...register(`${filter}.operator`, { required: true })}>
+                <Combobox
+                  size="sm"
+                  error={!!errors[`${filter}.operator`]}
+                  helpMessage={errors[`${filter}.operator`] ? 'Este campo não pode ficar vazio' : ''}
+                  {...register(`${filter}.operator`, { required: true })}
+                >
                   {operators.map((operator) => (
                     <SelectItem key={operator} value={operator} label={operator} size="sm" />
                   ))}
@@ -366,7 +373,9 @@ export function Home() {
                 })}
               </FilterWrapper>
             ))}
-            <ButtonSubmit type="submit">Buscar</ButtonSubmit>
+            <ButtonSubmit type="submit" disabled={mainTable === '' || attributesToSearch.length === 0}>
+              Buscar
+            </ButtonSubmit>
           </FiltersForm>
           <Button color="secondary" variant="outline" label="Limpar tudo" size="sm" onPress={handleClear} />
         </HomeContainer>
@@ -374,7 +383,7 @@ export function Home() {
       {results.length > 0 && (
         <ResultsContainer ref={resultsRef}>
           <Title>Resultados</Title>
-          <Table.Root dividers zebra>
+          <Table.Root dividers zebra style={{ alignSelf: 'center', width: 'max-content' }}>
             <thead>
               <Table.HeaderRow>
                 {Object.keys(results[0])?.map((key) => {

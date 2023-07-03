@@ -153,11 +153,11 @@ const getFilters = async (table: string): Promise<IFilters[]> => {
 export const getEnums = async (): Promise<IEnums> => {
   const response = await api.get('/general/enums')
   return {
-    bindingtype: response.data.bindingtype,
-    inventorytype: response.data.inventorytype,
-    itemclass: response.data.itemclass,
-    itemsubclass: response.data.itemsubclass,
-    damagetype: response.data.damagetype
+    bindingtype: response.data.bindingtype.filter((bindingtype: string) => bindingtype !== ''),
+    inventorytype: response.data.inventorytype.filter((inventorytype: string) => inventorytype !== ''),
+    itemclass: response.data.itemclass.filter((itemclass: string) => itemclass !== ''),
+    itemsubclass: response.data.itemsubclass.filter((itemsubclass: string) => itemsubclass !== ''),
+    damagetype: response.data.damagetype.filter((damagetype: string) => damagetype !== '')
   }
 }
 

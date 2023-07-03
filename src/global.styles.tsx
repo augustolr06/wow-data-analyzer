@@ -17,6 +17,7 @@ export const GlobalStyle = createGlobalStyle`
     -webkit-text-size-adjust: 100%;
   }
   body {
+    margin-bottom: 50px;
     min-height: 100vh;
     background: ${({ theme }) => theme.colors.secondaryD1};
     color: ${({ theme }) => theme.colors.neutralL5};
