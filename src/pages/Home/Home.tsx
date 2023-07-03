@@ -93,6 +93,7 @@ export function Home() {
   const tables = schema.tables.slice()
 
   const resultsRef = useRef<HTMLDivElement>(null)
+  const graphRef = useRef<HTMLDivElement>(null)
 
   const [mainTable, setMainTable] = useState<string>('')
   const [relatedTables, setRelatedTables] = useState<string[]>([])
@@ -117,16 +118,18 @@ export function Home() {
   useEffect(() => {
     const run = async () => {
       const schemaAPI = await getSchema()
+      if (schemaAPI.status === 'error') {
+        throw new Error(schemaAPI.message)
+      }
       setSchema(schemaAPI)
       const enumsAPI = await getEnums()
+      if (enumsAPI.status === 'error') {
+        throw new Error(enumsAPI.message)
+      }
       setEnums(enumsAPI)
     }
     run()
   }, [])
-
-  useEffect(() => {
-    console.log('attributesToSearch', attributesToSearch)
-  }, [attributesToSearch])
 
   useEffect(() => {
     setShowGraph(false)
@@ -188,14 +191,17 @@ export function Home() {
     if (paramFilters) {
       url += `&filters=${paramFilters}`
     }
-    console.log('url', url)
     await api.get(url).then((response) => {
+      if (response.data.status === 'error') {
+        throw new Error(response.data.message)
+      }
       setResults(response.data)
     })
   }
 
   const handleShowGraph = () => {
     setShowGraph(!showGraph)
+    graphRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -206,7 +212,7 @@ export function Home() {
       <BackgroundImage />
       {schema.tables.length === 0 ? (
         <HomeContainer>
-          <RectangleSkeleton height={400} />
+          <RectangleSkeleton height={700} />
         </HomeContainer>
       ) : (
         <HomeContainer>
@@ -332,13 +338,13 @@ export function Home() {
               </FilterWrapper>
             )}
             {selectedFilters.map((filter, index) => (
-              <FilterWrapper key={filter} operatorZIndex={index}>
+              <FilterWrapper key={`${filter}-${index}`} operatorZIndex={index}>
                 <Subtitle style={{ width: 250 }}>{filter.split('.')[1]}</Subtitle>
                 {schema.tableProperties[filter.split('.')[0]].filters.map((attribute) => {
                   if (attribute.name === filter) {
                     return (
                       <Combobox
-                        key={attribute.name}
+                        key={`${attribute.name}-operator-${index}`}
                         size="sm"
                         error={!!errors[`${filter}.operator`]}
                         helpMessage={errors[`${filter}.operator`] ? 'Este campo não pode ficar vazio' : ''}
@@ -357,7 +363,7 @@ export function Home() {
                     if (attribute.type === 'varchar') {
                       return (
                         <TextField
-                          key={attribute.name}
+                          key={`${attribute.name}-value-${index}`}
                           placeholder="Digite o valor"
                           size="sm"
                           error={!!errors[`${filter}.value`]}
@@ -369,7 +375,7 @@ export function Home() {
                       /* Se o atributo.type for int4, o TextField deve ser um number */
                       return (
                         <TextField
-                          key={attribute.name}
+                          key={`${attribute.name}-value-${index}`}
                           placeholder="Digite o valor"
                           size="sm"
                           error={!!errors[`${filter}.value`]}
@@ -381,7 +387,7 @@ export function Home() {
                       /* Se o atributo.type pertencer a uma das chaves de enum, deve deve ser um Combobox, onde os SelectItems serão os valores do array enum.[nome daquele atributo.type] */
                       return (
                         <Combobox
-                          key={attribute.name}
+                          key={`${attribute.name}-value-${index}`}
                           placeholder="Escolha uma opção"
                           size="sm"
                           error={!!errors[`${filter}.value`]}
@@ -396,7 +402,7 @@ export function Home() {
                     } else if (attribute.type === '_int4') {
                       return (
                         <TextField
-                          key={attribute.name}
+                          key={`${attribute.name}-value-${index}`}
                           placeholder="Digito os valores separados por vírgula"
                           size="sm"
                           error={!!errors[`${filter}.value`]}
@@ -407,8 +413,8 @@ export function Home() {
                     } else if (attribute.type === '_varchar') {
                       return (
                         <TextField
-                          key={attribute.name}
-                          placeholder="Digito os valores separados por vírgula"
+                          key={`${attribute.name}-value-${index}`}
+                          placeholder="Digito os valores separados por | (pipe)"
                           size="sm"
                           error={!!errors[`${filter}.value`]}
                           helpMessage={errors[`${filter}.value`] ? 'Este campo não pode ficar vazio' : ''}
@@ -429,12 +435,20 @@ export function Home() {
             variant="outline"
             label="Limpar tudo"
             size="sm"
+            disabled={mainTable === '' || attributesToSearch.length === 0 || results.length === 0}
             onPress={() => handleClear(true, true)}
           />
-          <Button color="primary" variant="outline" label="Mostrar no Graph" size="sm" onPress={handleShowGraph} />
+          <Button
+            color="primary"
+            disabled={results.length === 0}
+            variant="outline"
+            label="Mostrar no Gráfico"
+            size="sm"
+            onPress={handleShowGraph}
+          />
 
           {results.length > 0 && showGraph && (
-            <GraphContainer>
+            <GraphContainer ref={graphRef}>
               <h1>Gráfico</h1>
               <Graph
                 database={results}
@@ -490,7 +504,6 @@ export function Home() {
                       )
                     } else {
                       if (typeof value === 'object') {
-                        console.log(value)
                         if (!Number.isNaN(Number(Object.keys(value)[0]))) {
                           return (
                             <Table.BodyCol
@@ -503,7 +516,6 @@ export function Home() {
                           )
                         } else {
                           return Object.values(value).map((item: any, index) => {
-                            console.log(typeof item)
                             return (
                               <Table.BodyCol
                                 key={index}

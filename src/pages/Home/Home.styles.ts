@@ -196,3 +196,13 @@ export const GraphContainer = styled.div`
   border-radius: 10px;
   padding: 20px;
 `
+
+export const ErrorAPIContainer = styled.div`
+  width: 100%;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+`

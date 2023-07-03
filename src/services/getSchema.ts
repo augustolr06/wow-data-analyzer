@@ -32,6 +32,8 @@ export interface IEnums {
   itemclass: string[]
   itemsubclass: string[]
   damagetype: string[]
+  status?: 'idle' | 'loading' | 'success' | 'error'
+  message?: string
 
   [key: string]: string[]
 }
@@ -39,6 +41,8 @@ export interface IEnums {
 export interface ISchema {
   tables: string[]
   tableProperties: TTable
+  status?: 'idle' | 'loading' | 'success' | 'error'
+  message?: string
 }
 
 const operators = [
