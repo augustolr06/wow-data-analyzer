@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Checkbox, Select, SelectItem, TextField, IconButton, Combobox, RectangleSkeleton, Button } from '@nexds/web'
 import * as Table from '@nexds/web/dist/components/Table' // Table.BodyCol, Table.BodyRow, Table.HeaderCol, Table.HeaderRow, Table.Root
 
-import { getSchema, getEnums, ISchema, IFilters, IEnums, IResultsQuest, IResultsItem } from '@/services/getSchema'
+import { getSchema, getEnums, ISchema, IFilters, IEnums } from '@/services/getSchema'
 
 import { api } from '../../services/api'
 // import { getOperatorSymbol } from '../utils/filters'
@@ -99,7 +99,7 @@ export function Home() {
 
   const [attributesToSearch, setAttributesToSearch] = useState<string[]>([])
 
-  const [results, setResults] = useState<IResultsQuest[] | IResultsItem[]>([])
+  const [results, setResults] = useState([])
 
   const {
     register,
@@ -107,11 +107,6 @@ export function Home() {
     formState: { errors },
     reset
   } = useForm()
-
-  useEffect(() => {
-    console.log('attributesToSearch', attributesToSearch)
-    console.log('selectedFilters', selectedFilters)
-  }, [attributesToSearch, selectedFilters])
 
   useEffect(() => {
     const run = async () => {
@@ -124,6 +119,7 @@ export function Home() {
   }, [])
 
   useEffect(() => {
+    handleClear(true, false)
     if (mainTable in schema.tableProperties) {
       setRelatedTables(schema.tableProperties[mainTable].relationships)
       setAttributesToFilter(schema.tableProperties[mainTable].filters)
@@ -133,11 +129,12 @@ export function Home() {
   useEffect(() => {
     if (results.length > 0) {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth' })
+      console.log(results)
     }
   }, [results])
 
-  const handleClear = (clearResults?: boolean) => {
-    setMainTable('')
+  const handleClear = (clearResults?: boolean, clearMainTable?: boolean) => {
+    clearMainTable && setMainTable('')
     setSelectedRelationships([])
     setSelectedFilters([])
     setAttributesToSearch([])
@@ -390,11 +387,15 @@ export function Home() {
                   if (typeof results[0][key] === 'object') {
                     return (
                       results[0][key] &&
-                      Object.keys(results[0][key]).map((item: string, index) => {
-                        return <Table.HeaderCol key={index} label={`${item} de ${key}`} />
+                      Object.keys(results[0][key]).map((item, index) => {
+                        if (Number.isNaN(Number(item))) {
+                          return <Table.HeaderCol key={index} label={`${item} de ${key}`} />
+                        } else if (index === 0) return <Table.HeaderCol key={index} label={`id de ${key}`} />
                       })
                     )
-                  } else return <Table.HeaderCol key={key} label={key} />
+                  } else {
+                    return <Table.HeaderCol key={key} label={key} />
+                  }
                 })}
               </Table.HeaderRow>
             </thead>
@@ -402,28 +403,53 @@ export function Home() {
               {results.map((result, index) => (
                 <Table.BodyRow key={index}>
                   {Object.values(result).map((value, index) => {
-                    if (typeof value === 'object') {
-                      return Object.values(value).map((item: any, index) => {
-                        return (
-                          <Table.BodyCol
-                            key={index}
-                            content={item}
-                            align="left"
-                            minWidth="50px"
-                            style={{ whiteSpace: 'nowrap' }}
-                          />
-                        )
-                      })
-                    } else {
+                    if (value.length === 0) {
                       return (
                         <Table.BodyCol
                           key={index}
-                          content={value}
+                          content="[null]"
                           align="left"
                           minWidth="80px"
                           style={{ whiteSpace: 'nowrap' }}
                         />
                       )
+                    } else {
+                      if (typeof value === 'object') {
+                        console.log(value)
+                        if (!Number.isNaN(Number(Object.keys(value)[0]))) {
+                          return (
+                            <Table.BodyCol
+                              key={index}
+                              content={Object.values(value).join(', ')}
+                              align="left"
+                              minWidth="50px"
+                              style={{ whiteSpace: 'nowrap' }}
+                            />
+                          )
+                        } else {
+                          return Object.values(value).map((item: any, index) => {
+                            return (
+                              <Table.BodyCol
+                                key={index}
+                                content={item}
+                                align="left"
+                                minWidth="50px"
+                                style={{ whiteSpace: 'nowrap' }}
+                              />
+                            )
+                          })
+                        }
+                      } else {
+                        return (
+                          <Table.BodyCol
+                            key={index}
+                            content={value}
+                            align="left"
+                            minWidth="80px"
+                            style={{ whiteSpace: 'nowrap' }}
+                          />
+                        )
+                      }
                     }
                   })}
                 </Table.BodyRow>

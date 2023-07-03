@@ -77,6 +77,15 @@ export interface IResultsItem {
   [key: string]: string | number | boolean | number[] | any
 }
 
+export interface IResultsQuestRewards {
+  id: number
+  experience: number
+  money: number
+  item: number[]
+  reputations: number[]
+  [key: string]: string | number | number[] | any
+}
+
 export interface ITableProperties {
   attributes: string[]
   relationships: string[]

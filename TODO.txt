@@ -1,2 +1,9 @@
  Próximos passos:
 * testar tabela por tabela;
+
+
+
+se ao converter um item para number o valor é NaN, isso significa que não é um array. Nesse caso:
+  <Table.HeaderCol key={index} label={`${item} de ${key}`} />
+senão:
+  deve mostrar apenas um header
