@@ -60,6 +60,8 @@ type formData = Record<string, tableData>
 const operators = [
   'equals',
   'not',
+  'has',
+  'hasEvery',
   'in',
   'notIn',
   'lt',
@@ -133,6 +135,7 @@ export function Home() {
   useEffect(() => {
     if (results.length > 0) {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth' })
+      console.log('results', results)
     }
   }, [results])
 
@@ -319,16 +322,23 @@ export function Home() {
             {selectedFilters.map((filter, index) => (
               <FilterWrapper key={filter} operatorZIndex={index}>
                 <Subtitle style={{ width: 250 }}>{filter.split('.')[1]}</Subtitle>
-                <Combobox
-                  size="sm"
-                  error={!!errors[`${filter}.operator`]}
-                  helpMessage={errors[`${filter}.operator`] ? 'Este campo não pode ficar vazio' : ''}
-                  {...register(`${filter}.operator`, { required: true })}
-                >
-                  {operators.map((operator) => (
-                    <SelectItem key={operator} value={operator} label={operator} size="sm" />
-                  ))}
-                </Combobox>
+                {schema.tableProperties[filter.split('.')[0]].filters.map((attribute) => {
+                  if (attribute.name === filter) {
+                    return (
+                      <Combobox
+                        key={attribute.name}
+                        size="sm"
+                        error={!!errors[`${filter}.operator`]}
+                        helpMessage={errors[`${filter}.operator`] ? 'Este campo não pode ficar vazio' : ''}
+                        {...register(`${filter}.operator`, { required: true })}
+                      >
+                        {attribute.operators.map((operator) => (
+                          <SelectItem key={operator} value={operator} label={operator} size="sm" />
+                        ))}
+                      </Combobox>
+                    )
+                  } else return <></>
+                })}
                 {schema.tableProperties[filter.split('.')[0]].filters.map((attribute) => {
                   if (attribute.name === filter) {
                     /* Se o atributo.type for varchar, Deve ser um Textfield padrão */
@@ -370,6 +380,28 @@ export function Home() {
                             <SelectItem key={value} value={value} label={value} size="sm" />
                           ))}
                         </Combobox>
+                      )
+                    } else if (attribute.type === '_int4') {
+                      return (
+                        <TextField
+                          key={attribute.name}
+                          placeholder="Digito os valores separados por vírgula"
+                          size="sm"
+                          error={!!errors[`${filter}.value`]}
+                          helpMessage={errors[`${filter}.value`] ? 'Este campo não pode ficar vazio' : ''}
+                          {...register(`${filter}.value`, { required: true })}
+                        />
+                      )
+                    } else if (attribute.type === '_varchar') {
+                      return (
+                        <TextField
+                          key={attribute.name}
+                          placeholder="Digito os valores separados por vírgula"
+                          size="sm"
+                          error={!!errors[`${filter}.value`]}
+                          helpMessage={errors[`${filter}.value`] ? 'Este campo não pode ficar vazio' : ''}
+                          {...register(`${filter}.value`, { required: true })}
+                        />
                       )
                     }
                   }

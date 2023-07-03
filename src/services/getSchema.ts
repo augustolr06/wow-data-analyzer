@@ -1,91 +1,5 @@
 import { api } from './api'
 
-export interface IResultsQuest {
-  id: number
-  title: string
-  description: string
-  area: number
-  rewards: number
-  requirements: number
-  area_quest_areaToarea: {
-    id: number
-    name: string
-  }
-  quest_requirements: {
-    id: number
-    max_character_level: number
-    min_character_level: number
-    faction: string
-  }
-  quest_rewards: {
-    id: number
-    experience: number
-    money: number
-    item: number[]
-    reputations: number[]
-  }
-  [key: string]: string | number | number[] | any
-}
-
-export interface IResultsItem {
-  id: number
-  binding: string
-  durability: number
-  inventory_type: string
-  is_equippable: boolean
-  is_stackable: boolean
-  item_class: string
-  item_stats: number
-  item_sub_class: string
-  level: number
-  max_count: number
-  name: string
-  purchase_price: number
-  purchase_quantity: number
-  quality: string
-  required_level: number
-  sell_price: number
-  spells: number[]
-  unique_equipped: boolean
-  weapon_stats: number
-  item_stats_item_item_statsToitem_stats: {
-    id: number
-    agility: number
-    avoidance: number
-    critical_strike: number
-    fire_resistance: number
-    frost_resistance: number
-    haste: number
-    intellect: number
-    leech: number
-    mana: number
-    mastery: number
-    nature_resistance: number
-    parry: number
-    shadow_resistance: number
-    stamina: number
-    strength: number
-    versatility: number
-  }
-  weapon_stats_item_weapon_statsToweapon_stats: {
-    id: number
-    min_damage: number
-    max_damage: number
-    damage_class: string
-  }
-
-  [key: string]: string | number | boolean | number[] | any
-}
-
-export interface IResultsQuestRewards {
-  id: number
-  experience: number
-  money: number
-  item: number[]
-  reputations: number[]
-  [key: string]: string | number | number[] | any
-}
-
 export interface ITableProperties {
   attributes: string[]
   relationships: string[]
@@ -109,6 +23,7 @@ interface IRelationships {
 export interface IFilters {
   name: string
   type: string
+  operators: string[]
 }
 
 export interface IEnums {
@@ -125,6 +40,23 @@ export interface ISchema {
   tables: string[]
   tableProperties: TTable
 }
+
+const operators = [
+  'equals',
+  'not',
+  'has',
+  'hasEvery',
+  'in',
+  'notIn',
+  'lt',
+  'lte',
+  'gt',
+  'gte',
+  'contains',
+  'search',
+  'startsWith',
+  'endsWith'
+]
 
 // 1. Obter os nomes das tabelas do banco através do endpoint general/tables
 // 2. Obter os nomes das colunas de cada tabela através do endpoint general/columns
@@ -183,19 +115,27 @@ export const getSchema = async (): Promise<ISchema> => {
   for (const table of tables) {
     const columns = (await getColumns(table)).columns
     const relationships = (await getRelationships(table)).relationships.filter((relationship) => relationship !== null)
-    const filters = await getFilters(table)
+    const filtersAPI = await getFilters(table)
 
     // cada tabela deve incluir, nos filtros, os atributos das tabelas relacionadas
 
     for (const relationship of relationships) {
       const relatedColumns = (await getColumns(relationship)).columns.filter((column) => column !== 'id')
       for (const relatedColumn of relatedColumns) {
-        filters.push({
+        filtersAPI.push({
           name: `${relationship}.${relatedColumn}`,
           type: 'string'
         })
       }
     }
+    const filters = filtersAPI.map((filter) => {
+      if (filter.type.startsWith('_')) {
+        filter.operators = ['has', 'hasEvery']
+      } else {
+        filter.operators = operators
+      }
+      return filter
+    })
 
     tableProperties[table] = {
       attributes: columns,
