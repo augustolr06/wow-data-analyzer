@@ -119,7 +119,11 @@ export function Home() {
   }, [])
 
   useEffect(() => {
-    handleClear(true, false)
+    console.log('attributesToSearch', attributesToSearch)
+  }, [attributesToSearch])
+
+  useEffect(() => {
+    handleClear(false, false)
     if (mainTable in schema.tableProperties) {
       setRelatedTables(schema.tableProperties[mainTable].relationships)
       setAttributesToFilter(schema.tableProperties[mainTable].filters)
@@ -129,18 +133,19 @@ export function Home() {
   useEffect(() => {
     if (results.length > 0) {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth' })
-      console.log(results)
     }
   }, [results])
 
   const handleClear = (clearResults?: boolean, clearMainTable?: boolean) => {
-    clearMainTable && setMainTable('')
+    if (clearResults) {
+      setResults([])
+    }
+    if (clearMainTable) {
+      setMainTable('')
+    }
     setSelectedRelationships([])
     setSelectedFilters([])
     setAttributesToSearch([])
-    clearResults && setResults([])
-    setRelatedTables([])
-    setAttributesToFilter([])
   }
 
   const handleAttributeSelection = (table: string, attribute: string, action: 'add' | 'remove') => {
@@ -176,7 +181,6 @@ export function Home() {
     await api.get(url).then((response) => {
       setResults(response.data)
     })
-    handleClear(false)
   }
 
   return (
@@ -215,13 +219,14 @@ export function Home() {
                     schema.tableProperties[mainTable].attributes.map((attribute) => (
                       <Checkbox
                         size="sm"
-                        key={attribute}
+                        key={`${mainTable}.${attribute}`}
                         label={attribute}
-                        onChange={(event) =>
+                        checked={attributesToSearch.includes(`${mainTable}.${attribute}`)}
+                        onChange={(event) => {
                           event.target.checked
                             ? handleAttributeSelection(mainTable, attribute, 'add')
                             : handleAttributeSelection(mainTable, attribute, 'remove')
-                        }
+                        }}
                       />
                     ))}
                 </AttributesWrapper>
@@ -258,6 +263,7 @@ export function Home() {
                           key={attribute}
                           label={attribute}
                           size="sm"
+                          checked={attributesToSearch.includes(`${relationships}.${attribute}`)}
                           onChange={(event) =>
                             event.target.checked
                               ? handleAttributeSelection(relationships, attribute, 'add')
@@ -374,7 +380,13 @@ export function Home() {
               Buscar
             </ButtonSubmit>
           </FiltersForm>
-          <Button color="secondary" variant="outline" label="Limpar tudo" size="sm" onPress={handleClear} />
+          <Button
+            color="secondary"
+            variant="outline"
+            label="Limpar tudo"
+            size="sm"
+            onPress={() => handleClear(true, true)}
+          />
         </HomeContainer>
       )}
       {results.length > 0 && (
@@ -433,10 +445,13 @@ export function Home() {
                           )
                         } else {
                           return Object.values(value).map((item: any, index) => {
+                            console.log(typeof item)
                             return (
                               <Table.BodyCol
                                 key={index}
-                                content={item.length === 0 ? '[ null ]' : item.join(', ')}
+                                content={
+                                  item.length === 0 ? '[ null ]' : typeof item === 'object' ? item.join(', ') : item
+                                }
                                 align="left"
                                 minWidth="50px"
                                 style={{ whiteSpace: 'nowrap' }}
