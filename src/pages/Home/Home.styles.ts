@@ -193,7 +193,6 @@ export const GraphContainer = styled.div`
   width: 100%;
   height: 100vh;
   margin-top: 80px;
-  background-color: ${(props) => props.theme.colors.secondaryD1};
   border-radius: 10px;
   padding: 20px;
 `

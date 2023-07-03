@@ -18,7 +18,7 @@ export function Graph(props: GraphProps) {
   console.log(quantity)
 
   const options = {
-    title: 'Ad-Hoc', // TODO: muda o título.
+    title: 'Ad-Hoc',
     curveType: '',
     legend: { position: 'bottom' },
     hAxis: { title: hAxisTitle },
