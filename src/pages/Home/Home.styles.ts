@@ -149,14 +149,15 @@ export const FilterWrapper = styled.div<FilterWrapperProps>`
 `
 
 export const ButtonSubmit = styled.button`
-  width: 100px;
-  height: 40px;
-  border-radius: 5px;
+  max-width: max-content;
+  width: 100%;
+  height: 50px;
+  border-radius: 8px;
   border: none;
-  padding: 5px 10px;
+  padding: 5px 33px;
   background-color: ${(props) => props.theme.colors.primary};
   color: ${(props) => props.theme.colors.neutralL5};
-  ${(props) => props.theme.fonts.labelMD};
+  ${(props) => props.theme.fonts.titleSM};
   transition: all 0.2s ease-in-out;
 
   align-self: center;
@@ -168,8 +169,8 @@ export const ButtonSubmit = styled.button`
 `
 
 export const ResultsContainer = styled.div`
+  max-width: 200%;
   width: 100%;
-  margin: 20px;
 `
 
 export const Tag = styled.div`

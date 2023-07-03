@@ -1,5 +1,82 @@
 import { api } from './api'
 
+export interface IResultsQuest {
+  id: number
+  title: string
+  description: string
+  area: number
+  rewards: number
+  requirements: number
+  area_quest_areaToarea: {
+    id: number
+    name: string
+  }
+  quest_requirements: {
+    id: number
+    max_character_level: number
+    min_character_level: number
+    faction: string
+  }
+  quest_rewards: {
+    id: number
+    experience: number
+    money: number
+    item: number[]
+    reputations: number[]
+  }
+  [key: string]: string | number | number[] | any
+}
+
+export interface IResultsItem {
+  id: number
+  binding: string
+  durability: number
+  inventory_type: string
+  is_equippable: boolean
+  is_stackable: boolean
+  item_class: string
+  item_stats: number
+  item_sub_class: string
+  level: number
+  max_count: number
+  name: string
+  purchase_price: number
+  purchase_quantity: number
+  quality: string
+  required_level: number
+  sell_price: number
+  spells: number[]
+  unique_equipped: boolean
+  weapon_stats: number
+  item_stats_item_item_statsToitem_stats: {
+    id: number
+    agility: number
+    avoidance: number
+    critical_strike: number
+    fire_resistance: number
+    frost_resistance: number
+    haste: number
+    intellect: number
+    leech: number
+    mana: number
+    mastery: number
+    nature_resistance: number
+    parry: number
+    shadow_resistance: number
+    stamina: number
+    strength: number
+    versatility: number
+  }
+  weapon_stats_item_weapon_statsToweapon_stats: {
+    id: number
+    min_damage: number
+    max_damage: number
+    damage_class: string
+  }
+
+  [key: string]: string | number | boolean | number[] | any
+}
+
 export interface ITableProperties {
   attributes: string[]
   relationships: string[]

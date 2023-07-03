@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 
-import { Checkbox, Select, SelectItem, TextField, IconButton, Combobox, RectangleSkeleton } from '@nexds/web'
+import { Checkbox, Select, SelectItem, TextField, IconButton, Combobox, RectangleSkeleton, Button } from '@nexds/web'
 import * as Table from '@nexds/web/dist/components/Table' // Table.BodyCol, Table.BodyRow, Table.HeaderCol, Table.HeaderRow, Table.Root
 
-import { getSchema, getEnums, ISchema, IFilters, IEnums } from '@/services/getSchema'
+import { getSchema, getEnums, ISchema, IFilters, IEnums, IResultsQuest, IResultsItem } from '@/services/getSchema'
 
 import { api } from '../../services/api'
 // import { getOperatorSymbol } from '../utils/filters'
@@ -88,6 +88,8 @@ export function Home() {
 
   const tables = schema.tables.slice()
 
+  const resultsRef = useRef<HTMLDivElement>(null)
+
   const [mainTable, setMainTable] = useState<string>('')
   const [relatedTables, setRelatedTables] = useState<string[]>([])
   const [selectedRelationships, setSelectedRelationships] = useState<string[]>([])
@@ -97,7 +99,7 @@ export function Home() {
 
   const [attributesToSearch, setAttributesToSearch] = useState<string[]>([])
 
-  const [results, setResults] = useState<any[]>([])
+  const [results, setResults] = useState<IResultsQuest[] | IResultsItem[]>([])
 
   const {
     register,
@@ -106,6 +108,11 @@ export function Home() {
   } = useForm()
 
   useEffect(() => {
+    console.log('attributesToSearch', attributesToSearch)
+  }, [attributesToSearch])
+
+  useEffect(() => {
+    setMainTable('')
     const run = async () => {
       const schemaAPI = await getSchema()
       setSchema(schemaAPI)
@@ -116,18 +123,27 @@ export function Home() {
   }, [])
 
   useEffect(() => {
-    setRelatedTables([])
-    setSelectedRelationships([])
-    setSelectedFilters([])
-    setAttributesToSearch([])
-    setAttributesToFilter([])
-    setResults([])
-
     if (mainTable in schema.tableProperties) {
       setRelatedTables(schema.tableProperties[mainTable].relationships)
       setAttributesToFilter(schema.tableProperties[mainTable].filters)
     }
   }, [mainTable])
+
+  useEffect(() => {
+    if (results.length > 0) {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [results])
+
+  const handleClear = () => {
+    setMainTable('')
+    setSelectedRelationships([])
+    setSelectedFilters([])
+    setAttributesToSearch([])
+    setResults([])
+    setRelatedTables([])
+    setAttributesToFilter([])
+  }
 
   const handleAttributeSelection = (table: string, attribute: string, action: 'add' | 'remove') => {
     if (action === 'add') {
@@ -157,8 +173,10 @@ export function Home() {
     if (paramFilters) {
       url += `&filters=${paramFilters}`
     }
+    console.log('url', url)
     await api.get(url).then((response) => {
       setResults(response.data)
+      console.log('response.data', response.data)
     })
   }
 
@@ -348,56 +366,56 @@ export function Home() {
                 })}
               </FilterWrapper>
             ))}
-            <ButtonSubmit
-              type="submit"
-              onClick={() => {
-                const newAttributesToSearch = schema.tableProperties[mainTable].attributes.map((attribute) => {
-                  if (attribute.includes('area')) {
-                    return attribute.replace('area', 'area_quest_areaToarea')
-                  }
-                  return attribute
-                })
-                if (attributesToSearch.length === 0) {
-                  console.log('newAttributesToSearch', newAttributesToSearch)
-                  setAttributesToSearch(newAttributesToSearch)
-                }
-              }}
-            >
-              Buscar
-            </ButtonSubmit>
+            <ButtonSubmit type="submit">Buscar</ButtonSubmit>
           </FiltersForm>
+          <Button color="secondary" variant="outline" label="Limpar tudo" size="sm" onPress={handleClear} />
         </HomeContainer>
       )}
       {results.length > 0 && (
-        <ResultsContainer>
+        <ResultsContainer ref={resultsRef}>
           <Title>Resultados</Title>
           <Table.Root dividers zebra>
             <thead>
               <Table.HeaderRow>
-                {attributesToSearch.map((attribute) => (
-                  <Table.HeaderCol key={attribute} label={attribute.split('.')[1]} />
-                ))}
+                {Object.keys(results[0])?.map((key) => {
+                  if (typeof results[0][key] === 'object') {
+                    return (
+                      results[0][key] &&
+                      Object.keys(results[0][key]).map((item: string, index) => {
+                        return <Table.HeaderCol key={index} label={`${item} de ${key}`} />
+                      })
+                    )
+                  } else return <Table.HeaderCol key={key} label={key} />
+                })}
               </Table.HeaderRow>
             </thead>
             <tbody>
               {results.map((result, index) => (
                 <Table.BodyRow key={index}>
-                  {attributesToSearch.map((attribute) => {
-                    return typeof result[attribute.split('.')[0]] === 'object' ? (
-                      <Table.BodyCol
-                        key={attribute}
-                        align="left"
-                        minWidth="90px"
-                        content={result[attribute.split('.')[0]][attribute.split('.')[1]] ?? 'null'}
-                      />
-                    ) : (
-                      <Table.BodyCol
-                        key={attribute}
-                        align="left"
-                        minWidth="90px"
-                        content={result[attribute.split('.')[1]] ?? 'null'}
-                      />
-                    )
+                  {Object.values(result).map((value, index) => {
+                    if (typeof value === 'object') {
+                      return Object.values(value).map((item: any, index) => {
+                        return (
+                          <Table.BodyCol
+                            key={index}
+                            content={item}
+                            align="left"
+                            minWidth="50px"
+                            style={{ whiteSpace: 'nowrap' }}
+                          />
+                        )
+                      })
+                    } else {
+                      return (
+                        <Table.BodyCol
+                          key={index}
+                          content={value}
+                          align="left"
+                          minWidth="80px"
+                          style={{ whiteSpace: 'nowrap' }}
+                        />
+                      )
+                    }
                   })}
                 </Table.BodyRow>
               ))}
