@@ -23,6 +23,12 @@ export const HeaderImage = styled.div`
   max-height: fit-content;
 `
 
+export const Tip = styled.p`
+  font-size: 14px;
+  color: ${(props) => props.theme.colors.neutralL0};
+  font-style: italic;
+`
+
 export const HomeContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -32,7 +38,7 @@ export const HomeContainer = styled.div`
 
   width: 70%;
   max-width: 1600px;
-  margin: 0 auto;
+  margin: 20px auto;
   gap: 15px;
 `
 
@@ -173,6 +179,16 @@ export const ButtonSubmit = styled.button`
   }
 `
 
+export const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  width: 100%;
+  margin-top: 20px;
+`
+
 export const ResultsContainer = styled.div`
   max-width: 200%;
   min-width: 90vw;
@@ -191,7 +207,6 @@ export const Tag = styled.div`
 
 export const GraphContainer = styled.div`
   width: 100%;
-  height: 100vh;
   margin-top: 80px;
   border-radius: 10px;
   padding: 20px;

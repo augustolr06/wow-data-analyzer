@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form'
 import { Checkbox, Select, SelectItem, TextField, IconButton, Combobox, RectangleSkeleton, Button } from '@nexds/web'
 import * as Table from '@nexds/web/dist/components/Table' // Table.BodyCol, Table.BodyRow, Table.HeaderCol, Table.HeaderRow, Table.Root
 
-import { getSchema, getEnums, ISchema, IFilters, IEnums } from '@/services/getSchema'
+import { getSchema, getEnums, TResult, ISchema, IFilters, IEnums } from '@/services/getSchema'
 
 import { api } from '../../services/api'
 // import { getOperatorSymbol } from '../utils/filters'
@@ -25,7 +25,9 @@ import {
   Subtitle,
   Selector,
   ResultsContainer,
-  GraphContainer
+  GraphContainer,
+  Tip,
+  ButtonsContainer
 } from './Home.styles'
 
 /*
@@ -104,9 +106,13 @@ export function Home() {
 
   const [attributesToSearch, setAttributesToSearch] = useState<string[]>([])
 
-  const [results, setResults] = useState([])
+  const [results, setResults] = useState<TResult[]>([])
 
   const [showGraph, setShowGraph] = useState(false)
+  const [showResults, setShowResults] = useState(false)
+
+  const [graphHeaders, setGraphHeaders] = useState<string[]>([])
+  const [graphData, setGraphData] = useState<string[]>([])
 
   const {
     register,
@@ -196,10 +202,15 @@ export function Home() {
         throw new Error(response.data.message)
       }
       setResults(response.data)
+      setShowResults(true)
     })
   }
 
   const handleShowGraph = () => {
+    const graphHeaders = Object.keys(results[0])
+    const graphData = results.map((result) => Object.values(result))
+    setGraphHeaders(graphHeaders)
+    setGraphData(graphData)
     setShowGraph(!showGraph)
     graphRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -216,6 +227,11 @@ export function Home() {
         </HomeContainer>
       ) : (
         <HomeContainer>
+          <Tip>
+            Dica: para uma melhor experiência com os resultados no gráfico, selecione primeiro o atributo cujos valores
+            aparecerão no eixo X. Depois, selecione o atributo cujos valores aparecerão no eixo Y, dando preferência
+            para atributos que possuem valores numéricos.
+          </Tip>
           <Title>Consulta</Title>
           <MainTableInfoWrapper>
             <Select
@@ -430,38 +446,44 @@ export function Home() {
               Buscar
             </ButtonSubmit>
           </FiltersForm>
-          <Button
-            color="secondary"
-            variant="outline"
-            label="Limpar tudo"
-            size="sm"
-            disabled={mainTable === '' || attributesToSearch.length === 0 || results.length === 0}
-            onPress={() => handleClear(true, true)}
-          />
-          <Button
-            color="primary"
-            disabled={results.length === 0}
-            variant="outline"
-            label="Mostrar no Gráfico"
-            size="sm"
-            onPress={handleShowGraph}
-          />
+          <ButtonsContainer>
+            <Button
+              color="secondary"
+              variant="outline"
+              label="Limpar tudo"
+              size="sm"
+              disabled={mainTable === '' || attributesToSearch.length === 0 || results.length === 0}
+              onPress={() => handleClear(true, true)}
+            />
+            <Button
+              color="secondary"
+              disabled={results.length === 0}
+              variant="outline"
+              label={showResults ? 'Esconder Resultados' : 'Mostrar Resultados'}
+              size="sm"
+              onPress={() => setShowResults(!showResults)}
+            />
+            <Button
+              color="secondary"
+              disabled={results.length === 0}
+              variant="outline"
+              label={showGraph ? 'Esconder Gráfico' : 'Mostrar Gráfico'}
+              size="sm"
+              onPress={() => (showGraph ? setShowGraph(false) : handleShowGraph())}
+            />
+          </ButtonsContainer>
 
-          {results.length > 0 && showGraph && (
-            <GraphContainer ref={graphRef}>
-              <h1>Gráfico</h1>
-              <Graph
-                database={results}
-                quantity={results.length}
-                hAxisTitle={Object.keys(results[0])[0]}
-                vAxisTitle={mainTable}
-                attribute={Object.keys(results[0])[0]}
-              />
-            </GraphContainer>
-          )}
+          <GraphContainer ref={graphRef}>
+            {results.length > 0 && showGraph && (
+              <>
+                <h1>Gráfico</h1>
+                <Graph vAxisTitle={mainTable} headers={graphHeaders} data={graphData} />
+              </>
+            )}
+          </GraphContainer>
         </HomeContainer>
       )}
-      {results.length > 0 && (
+      {/* {showResults && results.length > 0 && (
         <ResultsContainer ref={resultsRef}>
           <Title>Resultados</Title>
           <Table.Root dividers zebra style={{ alignSelf: 'center', width: 'max-content' }}>
@@ -547,7 +569,7 @@ export function Home() {
             </tbody>
           </Table.Root>
         </ResultsContainer>
-      )}
+      )} */}
     </>
   )
 }

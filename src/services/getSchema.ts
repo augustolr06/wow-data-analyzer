@@ -1,5 +1,7 @@
 import { api } from './api'
 
+export type TResult = Record<string, any>
+
 export interface ITableProperties {
   attributes: string[]
   relationships: string[]

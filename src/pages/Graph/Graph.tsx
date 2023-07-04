@@ -2,46 +2,39 @@ import React from 'react'
 import { Chart } from 'react-google-charts'
 
 interface GraphProps {
-  quantity: number
-  hAxisTitle: string
   vAxisTitle: string
-  database: any[]
-  attribute: string
+  headers: any[]
+  data: any[]
+}
+
+function getRandomColor() {
+  const letters = '0123456789ABCDEF'
+  let color = '#'
+  for (let index = 0; index < 6; index++) {
+    color += letters[Math.floor(Math.random() * 16)]
+  }
+  return color
 }
 
 export function Graph(props: GraphProps) {
-  const { database, attribute, hAxisTitle, vAxisTitle, quantity } = props
-  console.log(database)
-  console.log(attribute)
-  console.log(hAxisTitle)
-  console.log(vAxisTitle)
-  console.log(quantity)
+  const { vAxisTitle, headers, data } = props
 
   const options = {
     title: 'Ad-Hoc',
-    curveType: '',
+    hAxis: { title: `Atributos de ${vAxisTitle}` },
     legend: { position: 'bottom' },
-    hAxis: { title: hAxisTitle },
     vAxis: { title: vAxisTitle, minValue: 0, format: '0' },
     animation: { duration: 1000, easing: 'linear', startup: true }
   }
 
-  const data = [[hAxisTitle, vAxisTitle]] as any[]
+  headers.push({ role: 'style' })
+  data.map((item) => item.push(getRandomColor()))
 
-  database.forEach((element: any) => {
-    const index = data.findIndex((item: any) => item[0] === element[attribute])
-    if (index === -1) {
-      data.push([element[attribute], 1])
-    } else {
-      data[index][1]++
-    }
-  })
-
-  console.log(data)
+  data.unshift(headers)
 
   return (
     <div>
-      <Chart chartType="ColumnChart" width="100%" height="400px" data={data} options={options} chartLanguage="pt-BR" />
+      <Chart chartType="ColumnChart" width="100%" height="800px" data={data} options={options} chartLanguage="pt-BR" />
     </div>
   )
 }
