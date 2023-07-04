@@ -3,6 +3,7 @@
 import react from '@vitejs/plugin-react'
 import * as path from 'path'
 import { defineConfig } from 'vite'
+import Inspect from 'vite-plugin-inspect'
 import svgr from 'vite-plugin-svgr'
 
 // https://vitejs.dev/config/
@@ -23,7 +24,14 @@ export default defineConfig({
     port: 5174,
     open: '/'
   },
-  plugins: [react(), svgr()],
+  plugins: [
+    react(),
+    svgr(),
+    Inspect({
+      build: true,
+      outputDir: '.vite-inspect'
+    })
+  ],
   define: {
     'process.env': {}
   }
