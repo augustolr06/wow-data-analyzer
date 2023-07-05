@@ -161,13 +161,13 @@ export const ButtonSubmit = styled.button`
   border-radius: 8px;
   border: none;
   padding: 5px 33px;
+  margin-top: 30px;
   background-color: ${(props) => props.theme.colors.primary};
   color: ${(props) => props.theme.colors.neutralL5};
   ${(props) => props.theme.fonts.titleSM};
   transition: all 0.2s ease-in-out;
 
   align-self: center;
-  margin-top: 20px;
 
   &:not(:disabled):hover {
     background-color: ${(props) => props.theme.colors.primaryL1};
@@ -183,7 +183,7 @@ export const ButtonsContainer = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 15px;
   width: 100%;
   margin-top: 20px;
