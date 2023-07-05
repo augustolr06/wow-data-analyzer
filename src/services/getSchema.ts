@@ -25,7 +25,10 @@ interface IRelationships {
 export interface IFilters {
   name: string
   type: string
-  operators: string[]
+  operators: Array<{
+    value: string
+    label: string
+  }>
 }
 
 export interface IEnums {
@@ -34,10 +37,10 @@ export interface IEnums {
   itemclass: string[]
   itemsubclass: string[]
   damagetype: string[]
-  status?: 'idle' | 'loading' | 'success' | 'error'
+  status?: string
   message?: string
 
-  [key: string]: string[]
+  [key: string]: string[] | string | undefined
 }
 
 export interface ISchema {
@@ -48,20 +51,62 @@ export interface ISchema {
 }
 
 const operators = [
-  'equals',
-  'not',
-  'has',
-  'hasEvery',
-  'in',
-  'notIn',
-  'lt',
-  'lte',
-  'gt',
-  'gte',
-  'contains',
-  'search',
-  'startsWith',
-  'endsWith'
+  {
+    value: 'equals',
+    label: '='
+  },
+  {
+    value: 'not',
+    label: '!='
+  },
+  {
+    value: 'has',
+    label: 'tem'
+  },
+  {
+    value: 'hasEvery',
+    label: 'tem todos'
+  },
+  {
+    value: 'in',
+    label: 'está em'
+  },
+  {
+    value: 'notIn',
+    label: 'não está em'
+  },
+  {
+    value: 'lt',
+    label: '<'
+  },
+  {
+    value: 'lte',
+    label: '<='
+  },
+  {
+    value: 'gt',
+    label: '>'
+  },
+  {
+    value: 'gte',
+    label: '>='
+  },
+  {
+    value: 'contains',
+    label: 'contém'
+  },
+  {
+    value: 'search',
+    label: 'procurar por'
+  },
+  {
+    value: 'startsWith',
+    label: 'começa com'
+  },
+  {
+    value: 'endsWith',
+    label: 'termina com'
+  }
 ]
 
 // 1. Obter os nomes das tabelas do banco através do endpoint general/tables
@@ -130,13 +175,17 @@ export const getSchema = async (): Promise<ISchema> => {
       for (const relatedColumn of relatedColumns) {
         filtersAPI.push({
           name: `${relationship}.${relatedColumn}`,
-          type: 'string'
+          type: 'int4',
+          operators
         })
       }
     }
     const filters = filtersAPI.map((filter) => {
       if (filter.type.startsWith('_')) {
-        filter.operators = ['has', 'hasEvery']
+        filter.operators = [
+          { value: 'has', label: 'tem' },
+          { value: 'hasEvery', label: 'tem todos' }
+        ]
       } else {
         filter.operators = operators
       }

@@ -61,23 +61,6 @@ type tableData = Record<string, attributeData>
 
 type formData = Record<string, tableData>
 
-const operators = [
-  'equals',
-  'not',
-  'has',
-  'hasEvery',
-  'in',
-  'notIn',
-  'lt',
-  'lte',
-  'gt',
-  'gte',
-  'contains',
-  'search',
-  'startsWith',
-  'endsWith'
-]
-
 export function Home() {
   const [schema, setSchema] = useState<ISchema>({
     tables: [],
@@ -112,18 +95,20 @@ export function Home() {
   const [showResults, setShowResults] = useState(false)
 
   const [graphHeaders, setGraphHeaders] = useState<string[]>([])
-  const [graphData, setGraphData] = useState<string[]>([])
+  const [graphData, setGraphData] = useState<string[][]>([])
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
-    reset
-  } = useForm()
+    formState: { errors }
+  } = useForm({
+    shouldUnregister: true
+  })
 
   useEffect(() => {
     const run = async () => {
       const schemaAPI = await getSchema()
+      console.log('schemaAPI', schemaAPI)
       if (schemaAPI.status === 'error') {
         throw new Error(schemaAPI.message)
       }
@@ -187,7 +172,6 @@ export function Home() {
       })
       .flat()
     handleSearch(formattedFilters)
-    reset()
   }
 
   const handleSearch = async (filtersToSearch: string[]) => {
@@ -223,7 +207,7 @@ export function Home() {
       <BackgroundImage />
       {schema.tables.length === 0 ? (
         <HomeContainer>
-          <RectangleSkeleton height={700} />
+          <RectangleSkeleton height={800} />
         </HomeContainer>
       ) : (
         <HomeContainer>
@@ -255,7 +239,7 @@ export function Home() {
                   {schema.tableProperties[mainTable].attributes &&
                     schema.tableProperties[mainTable].attributes.map((attribute) => (
                       <Checkbox
-                        size="sm"
+                        size="md"
                         key={`${mainTable}.${attribute}`}
                         label={attribute}
                         checked={attributesToSearch.includes(`${mainTable}.${attribute}`)}
@@ -299,7 +283,7 @@ export function Home() {
                         <Checkbox
                           key={attribute}
                           label={attribute}
-                          size="sm"
+                          size="md"
                           checked={attributesToSearch.includes(`${relationships}.${attribute}`)}
                           onChange={(event) =>
                             event.target.checked
@@ -332,7 +316,9 @@ export function Home() {
               multiple
               maxDropdownRows={5}
               value={selectedFilters}
-              onChange={(filtros) => setSelectedFilters(filtros)}
+              onChange={(filtros) => {
+                setSelectedFilters(filtros)
+              }}
             >
               {attributesToFilter.map((attribute) => (
                 <SelectItem
@@ -367,7 +353,7 @@ export function Home() {
                         {...register(`${filter}.operator`, { required: true })}
                       >
                         {attribute.operators.map((operator) => (
-                          <SelectItem key={operator} value={operator} label={operator} size="sm" />
+                          <SelectItem key={operator.value} value={operator.value} label={operator.value} size="sm" />
                         ))}
                       </Combobox>
                     )
@@ -449,14 +435,6 @@ export function Home() {
           <ButtonsContainer>
             <Button
               color="secondary"
-              variant="outline"
-              label="Limpar tudo"
-              size="sm"
-              disabled={mainTable === '' || attributesToSearch.length === 0 || results.length === 0}
-              onPress={() => handleClear(true, true)}
-            />
-            <Button
-              color="secondary"
               disabled={results.length === 0}
               variant="outline"
               label={showResults ? 'Esconder Resultados' : 'Mostrar Resultados'}
@@ -476,14 +454,14 @@ export function Home() {
           <GraphContainer ref={graphRef}>
             {results.length > 0 && showGraph && (
               <>
-                <h1>Gráfico</h1>
+                <Title>Gráfico de Resultados</Title>
                 <Graph vAxisTitle={mainTable} headers={graphHeaders} data={graphData} />
               </>
             )}
           </GraphContainer>
         </HomeContainer>
       )}
-      {/* {showResults && results.length > 0 && (
+      {showResults && results.length > 0 && (
         <ResultsContainer ref={resultsRef}>
           <Title>Resultados</Title>
           <Table.Root dividers zebra style={{ alignSelf: 'center', width: 'max-content' }}>
@@ -569,7 +547,7 @@ export function Home() {
             </tbody>
           </Table.Root>
         </ResultsContainer>
-      )} */}
+      )}
     </>
   )
 }
