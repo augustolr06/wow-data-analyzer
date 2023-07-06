@@ -1,3 +1,4 @@
+/* eslint-disable no-var */
 import React, { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 
@@ -97,6 +98,12 @@ export function Home() {
   const [graphHeaders, setGraphHeaders] = useState<string[]>([])
   const [graphData, setGraphData] = useState<string[][]>([])
 
+  const [page, setPage] = useState(1)
+  const [rowsPerPage, setRowsPerPage] = useState(20)
+  const [maxPage, setMaxPage] = useState(1)
+
+  const [resultsToRender, setResultsToRender] = useState<TResult[]>([])
+
   const {
     register,
     handleSubmit,
@@ -137,9 +144,26 @@ export function Home() {
   useEffect(() => {
     if (results.length > 0) {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth' })
+
+      setMaxPage(Math.ceil(results.length / rowsPerPage))
+      const start = (page - 1) * rowsPerPage // Se rowsPerPage for 5, na primeira página, o start é 0, na segunda é 5, na terceira é 10, etc. Assim, o slice vai começar no item 0 e terminar no item 5, na primeira página, por exemplo.
+      const end = start + rowsPerPage
+      setResultsToRender(results.slice(start, end))
       console.log('results', results)
     }
-  }, [results])
+  }, [results, rowsPerPage, page])
+
+  function handleBack() {
+    if (page > 1) {
+      setPage(page - 1)
+    }
+  }
+
+  function handleNext() {
+    if (page < maxPage) {
+      setPage(page + 1)
+    }
+  }
 
   const handleClear = (clearResults?: boolean, clearMainTable?: boolean) => {
     if (clearResults) {
@@ -181,6 +205,7 @@ export function Home() {
     if (paramFilters) {
       url += `&filters=${paramFilters}`
     }
+    console.log(url)
     await api.get(url).then((response) => {
       if (response.data.status === 'error') {
         throw new Error(response.data.message)
@@ -489,7 +514,7 @@ export function Home() {
               </Table.HeaderRow>
             </thead>
             <tbody>
-              {results.map((result, index) => (
+              {resultsToRender.map((result, index) => (
                 <Table.BodyRow key={index}>
                   {Object.values(result).map((value, index) => {
                     if (value.length === 0) {
@@ -546,6 +571,16 @@ export function Home() {
               ))}
             </tbody>
           </Table.Root>
+          <Table.Pagination
+            page={page}
+            rowsPerPage={rowsPerPage}
+            maxPage={maxPage}
+            onBack={handleBack}
+            onNext={handleNext}
+            steps={[1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]}
+            onPagesChange={(value) => setPage(Number(value))}
+            onRowsPerPageChange={(value) => setRowsPerPage(Number(value))}
+          />
         </ResultsContainer>
       )}
     </>
